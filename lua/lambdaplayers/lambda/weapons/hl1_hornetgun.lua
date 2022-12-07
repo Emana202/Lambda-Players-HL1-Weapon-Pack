@@ -2,6 +2,7 @@ if !IsMounted( "hl1" ) then return end
 
 local IsValid = IsValid
 local CurTime = CurTime
+local ipairs = ipairs
 local SafeRemoveEntityDelayed = SafeRemoveEntityDelayed
 local Rand = math.Rand
 local random = math.random
@@ -9,6 +10,8 @@ local min = math.min
 local SpriteTrail = util.SpriteTrail
 local ents_Create = ents.Create
 local timer_Simple = timer.Simple
+local FindInSphere = ents.FindInSphere
+local ignorePlys = GetConVar( "ai_ignoreplayers" )
 
 local hornetMins, hornetMaxs = Vector( -4, -4, -4 ), Vector( 4, 4, 4 )
 local hornetClrRed, hornetClrOrange = Color(179, 39, 14, 128), Color(255, 128, 0, 128)
@@ -52,19 +55,26 @@ local function OnTrackThink( self )
     local myPos = self:GetPos()
     local myVel = self:GetVelocity()
 
-    local foundEnemy = false
-    local owner = self:GetOwner()
-    if IsValid( owner ) then
-        local enemy = owner:GetEnemy()
-        if IsValid( enemy ) then 
-            local enePos = enemy:WorldSpaceCenter()
-            if myPos:DistToSqr( enePos ) <= ( 512 * 512 ) and self:Visible( enemy ) then 
-                foundEnemy = true
-                self.l_EnemyLKP = enePos
+    if !LambdaIsValid( self.l_Enemy ) then
+        local lastDist = math.huge
+        for _, v in ipairs( FindInSphere( myPos, 512 ) ) do
+            if !LambdaIsValid( v ) or v:Health() <= 0 or !v:IsNPC() and !v:IsNextBot() and ( !v:IsPlayer() or !v:Alive() or ignorePlys:GetBool() ) or !self:Visible( v ) then
+                continue
             end
+
+            local curDist = myPos:DistToSqr( enePos )
+            if curDist >= lastDist then continue end
+
+            self.l_Enemy = v
+            lastDist = curDist
         end
     end
-    if !foundEnemy then self.l_EnemyLKP = ( self.l_EnemyLKP + myVel * self.l_FlySpeed * 0.1 ) end
+
+    if LambdaIsValid( self.l_Enemy ) and self:Visible( self.l_Enemy ) then
+        self.l_EnemyLKP = enemy:WorldSpaceCenter()
+    else
+        self.l_EnemyLKP = ( self.l_EnemyLKP + myVel * self.l_FlySpeed * 0.1 ) 
+    end
 
     local dirToEnemy = ( self.l_EnemyLKP - myPos ):GetNormalized()
     local flightDir = ( ( myVel:Length() < 0.1 ) and dirToEnemy or myVel:GetNormalized() )
@@ -149,7 +159,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         clip = 8,
         callback = function( self, wepent, target )
             if wepent.HornetsLeft > 0 then
-                local spawnAng = ( target:WorldSpaceCenter() - wepent:GetPos() ):Angle()
+                local spawnPos = self:GetAttachmentPoint( "eyes" ).Pos
+                local spawnAng = ( target:WorldSpaceCenter() - spawnPos ):Angle()
                 if self:GetForward():Dot( spawnAng:Forward() ) < 0.33 then return true end
 
                 local hornet = ents_Create( "base_anim" )
@@ -157,7 +168,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                     hornet.l_IsLambdaHornet = true
                     hornet.l_IsRed = ( random( 1, 5 ) <= 2 )
 
-                    local inRange = self:IsInRange( target, 300 )
+                    local inRange = self:IsInRange( target, 350 )
                     if !wepent.UsingSecondaryFire then
                         if wepent.HornetsLeft > 4 then
                             wepent.UsingSecondaryFire = inRange
@@ -166,7 +177,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                         wepent.UsingSecondaryFire = false
                     end
 
-                    local spawnPos = ( wepent:GetPos() + spawnAng:Forward() * 24 + spawnAng:Right() * 8 + spawnAng:Up() * -12 )
+                    local spawnPos = ( spawnPos + spawnAng:Forward() * 24 + spawnAng:Right() * 8 + spawnAng:Up() * -12 )
                     if wepent.UsingSecondaryFire then
                         local curPhase = wepent.FirePhase
                         wepent.FirePhase = ( curPhase + 1 )
@@ -204,9 +215,10 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                         hornet.l_FlySpeed = ( hornet.l_IsRed and 600 or 800 )
                         hornet.l_StopAttackTime = CurTime() + 3.5
+                        hornet.l_Enemy = NULL
                         hornet.l_EnemyLKP = target:WorldSpaceCenter()
 
-                        self.l_WeaponUseCooldown = CurTime() + Rand( 0.25, 0.55 )
+                        self.l_WeaponUseCooldown = CurTime() + 0.25
                     end
 
                     hornet:SetPos( spawnPos )
@@ -236,7 +248,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 end
             else
                 wepent.UsingSecondaryFire = false
-                self.l_WeaponUseCooldown = CurTime() + ( random( 1, 4 ) == 1 and Rand( 1.5, 3.0 ) or 0.25 )
+                self.l_WeaponUseCooldown = CurTime() + ( random( 1, 4 ) == 1 and Rand( 1.0, 4.0 ) or 0.25 )
             end
 
             return true

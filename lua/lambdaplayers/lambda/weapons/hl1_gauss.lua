@@ -25,7 +25,7 @@ local function FireBeam( lambda, wepent, pos, damage, rof )
     wepent:EmitSound( "Weapon_Gauss.Fire" )
     wepent.AfterShockSound = CurTime() + Rand( 0.3, 0.8 )
 
-    trTbl.start = wepent:GetPos()
+    trTbl.start = wepent:GetAttachment( 1 ).Pos
     trTbl.endpos = ( trTbl.start + ( pos - trTbl.start ):GetNormalized() * 8192 + VectorRand( -200, 200 ) )
     trTbl.filter = { lambda, wepent }
     local tr = TraceLine( trTbl )
@@ -98,7 +98,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         clip = 100,
         callback = function( self, wepent, target )
-            if random( 1, 20 ) == 1 then
+            if random( 1, 15 ) == 1 then
                 self.l_WeaponUseCooldown = CurTime() + 0.5
 
                 if !wepent.ChargeSound then wepent.ChargeSound = CreateSound( wepent, "Weapon_Gauss.Spin" ) end

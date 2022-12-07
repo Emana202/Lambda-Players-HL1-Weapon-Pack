@@ -73,7 +73,9 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 shootPos = shootPos + ( ( target:IsNextBot() and target.loco or target ):GetVelocity() * ( self:GetRangeTo( shootPos ) / 2000 ) )
             end
 
-            local fireDir = ( shootPos - wepent:GetPos() ):Angle()
+            local spawnPos = self:GetAttachmentPoint( "eyes" ).Pos
+
+            local fireDir = ( shootPos - spawnPos ):Angle()
             if self:GetForward():Dot( fireDir:Forward() ) < 0.33 then return true end
 
             local bolt = ents_Create( "crossbow_bolt" )
@@ -87,7 +89,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW )
 
-            bolt:SetPos( wepent:GetPos() + fireDir:Forward() * 32 ) 
+            bolt:SetPos( spawnPos + fireDir:Forward() * 32 ) 
             bolt:SetAngles( fireDir )
             bolt:SetOwner( self )
             bolt:Spawn()

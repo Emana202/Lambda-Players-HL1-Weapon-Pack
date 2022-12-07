@@ -7,7 +7,7 @@ local physBoxMaxs = Vector( -9.5, -3, -0.75 )
 
 local bulletData = {
     Damage = 40,
-    Spread = Vector( 0.12, 0.12, 0 ),
+    Spread = Vector( 0.1, 0.1, 0 ),
     Force = 10,
     HullSize = 5,
     TracerName = "Tracer"

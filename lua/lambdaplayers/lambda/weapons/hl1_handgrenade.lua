@@ -117,11 +117,12 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 if !IsValid( grenade ) then return end
 
                 local throwPos = ( LambdaIsValid( target ) and target:GetPos() or ( self:GetPos() + self:GetForward() * 500 ) )
-                local offsetZ = ( self:GetRangeTo( throwPos ) / random( 2, 4 ) )
-                local vecThrow = ( ( throwPos + Vector( 0, 0, offsetZ ) ) - wepent:GetPos() ):Angle()
+                local offsetZ = ( self:GetRangeTo( throwPos ) / 3 )
+                local spawnPos = self:GetAttachmentPoint( "eyes" ).Pos
+                local vecThrow = ( ( throwPos + Vector( 0, 0, offsetZ ) ) - spawnPos ):Angle()
 
                 grenade:SetModel( "models/w_grenade.mdl" )
-                grenade:SetPos( wepent:GetPos() )
+                grenade:SetPos( spawnPos )
                 grenade:SetAngles( Angle( 0, 0, 60 ) ) 
                 grenade:SetOwner( self )
                 grenade:Spawn()

@@ -12,7 +12,7 @@ local physBoxMins = Vector( -28, -5, 2 )
 local physBoxMaxs = Vector( 24, 3, 11 )
 
 if ( CLIENT ) then
-    killicon.AddAlias( "rpg_rocket", "lambdaplayers_weaponkillicons_hl1_rpg" )
+    killicon.Add( "rpg_rocket", "lambdaplayers/killicons/icon_hl1_rpg", Color( 255, 80, 0, 255 ) )
 end
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
@@ -22,7 +22,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         origin = "Half-Life 1",
         prettyname = "RPG",
         holdtype = "rpg",
-        killicon = "lambdaplayers/killicons/icon_hl1_rpg",
+        killicon = "rpg_rocket",
         bonemerge = true,
         keepdistance = 800,
         attackrange = 3000,
@@ -47,10 +47,10 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         callback = function( self, wepent, target )            
-            trTbl.start = wepent:GetPos()
+            trTbl.start = self:GetAttachmentPoint( "eyes" ).Pos
             trTbl.endpos = target:GetPos()
             trTbl.filter = target
-            
+
             local spawnAng = ( trTbl.endpos - trTbl.start ):Angle()
             trTbl.start = ( trTbl.start + spawnAng:Forward() * 32 + spawnAng:Right() * 8 - spawnAng:Up() * 8 )
             spawnAng = ( trTbl.endpos - trTbl.start ):Angle()
@@ -76,8 +76,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             rocket:SetAngles( spawnAng )
             rocket:SetOwner( self )
             rocket:Spawn()
-
-            rocket:SetLocalVelocity( rocket:GetVelocity() + selfFwd * self.loco:GetVelocity():Dot( selfFwd ) )
 
             wepent.CurrentRocket = rocket
             return true
