@@ -57,8 +57,9 @@ local function OnTrackThink( self )
 
     if !LambdaIsValid( self.l_Enemy ) then
         local lastDist = math.huge
+        local myOwner = self:GetOwner()
         for _, v in ipairs( FindInSphere( myPos, 512 ) ) do
-            if !LambdaIsValid( v ) or v:Health() <= 0 or !v:IsNPC() and !v:IsNextBot() and ( !v:IsPlayer() or !v:Alive() or ignorePlys:GetBool() ) or !self:Visible( v ) then
+            if !LambdaIsValid( v ) or v == myOwner or v:Health() <= 0 or !v:IsNPC() and !v:IsNextBot() and ( !v:IsPlayer() or !v:Alive() or ignorePlys:GetBool() ) or !self:Visible( v ) then
                 continue
             end
 
