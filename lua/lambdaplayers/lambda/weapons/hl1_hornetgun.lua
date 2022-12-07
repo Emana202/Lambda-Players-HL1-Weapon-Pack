@@ -70,7 +70,8 @@ local function OnTrackThink( self )
         end
     end
 
-    if LambdaIsValid( self.l_Enemy ) and self:Visible( self.l_Enemy ) then
+    local enemy = self.l_Enemy
+    if LambdaIsValid( enemy ) and self:Visible( enemy ) then
         self.l_EnemyLKP = enemy:WorldSpaceCenter()
     else
         self.l_EnemyLKP = ( self.l_EnemyLKP + myVel * self.l_FlySpeed * 0.1 ) 
