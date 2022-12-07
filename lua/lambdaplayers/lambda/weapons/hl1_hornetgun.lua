@@ -62,7 +62,7 @@ local function OnTrackThink( self )
                 continue
             end
 
-            local curDist = myPos:DistToSqr( enePos )
+            local curDist = myPos:DistToSqr( v:WorldSpaceCenter() )
             if curDist >= lastDist then continue end
 
             self.l_Enemy = v
