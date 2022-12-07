@@ -1,4 +1,4 @@
--- if !IsMounted( "hl1" ) then return end
+if !IsMounted( "hl1" ) then return end
 
 local CurTime = CurTime
 local DamageInfo = DamageInfo
