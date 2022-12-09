@@ -24,19 +24,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 800,
         attackrange = 3000,
 
-        OnEquip = function( lambda, wepent )
-            wepent.CurrentRocket = NULL
-        end,
-
-        OnThink = function( lambda, wepent )
-            if IsValid( wepent.CurrentRocket ) then lambda.l_WeaponUseCooldown = CurTime() + 2.0 end
-            return 0.1
-        end,
-
-        OnUnequip = function( lambda, wepent )
-            wepent.CurrentRocket = nil
-        end,
-
         callback = function( self, wepent, target )            
             trTbl.start = wepent:GetAttachment( 1 ).Pos
             trTbl.endpos = target:GetPos()
@@ -56,7 +43,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local rocket = ents_Create( "rpg_rocket" )
             if !IsValid( rocket ) then return end
 
-            self.l_WeaponUseCooldown = CurTime() + 1.5
+            self.l_WeaponUseCooldown = CurTime() + 2.0
             wepent:EmitSound( "lambdaplayers/weapons/hl1/rpg/rocketfire1.wav", 80, 100, 0.9, CHAN_WEAPON )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_RPG )
@@ -78,7 +65,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             spawnAng.x = ( spawnAng.x - 30 )          
             rocket:SetLocalVelocity( spawnAng:Forward() * 250 + selfFwd * self.loco:GetVelocity():Dot( selfFwd ) )
 
-            wepent.CurrentRocket = rocket
             return true
         end,
 
