@@ -60,6 +60,9 @@ hook.Add( "EntityEmitSound", "LambdaPlayers_HL1Pack_ReplaceSounds", function( da
             data.Pitch = 100
             data.Volume = 1.0
             data.Channel = CHAN_STATIC
+            
+            ent:StopSound( "lambdaplayers/weapons/hl1/rpg/rocket1.wav" ) 
+            ent:Remove()
 
             return true
         end

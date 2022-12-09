@@ -10,7 +10,8 @@ local bulletData = {
     Damage = 5,
     Force = 5,
     HullSize = 5,
-    TracerName = "Tracer"
+    TracerName = "Tracer",
+    Spread = Vector( 0.1, 0.1, 0 )
 }
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
@@ -22,8 +23,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         holdtype = "shotgun",
         killicon = "lambdaplayers/killicons/icon_hl1_shotgun",
         bonemerge = true,
-        keepdistance = 400,
-        attackrange = 600,
+        keepdistance = 600,
+        attackrange = 800,
 
         clip = 8,
         reloadtime = 3,
@@ -37,23 +38,18 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN )
 
             local pumpTime = 0.5
-            if self.l_Clip >= 2 and random( 8 ) == 1 and self:IsInRange( target, 600 ) then
+            if self.l_Clip >= 2 and random( 5 ) == 1 and self:IsInRange( target, 300 ) then
                 pumpTime = 0.9
                 self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN )
-
                 self.l_Clip = self.l_Clip - 2
                 wepent:EmitSound( "lambdaplayers/weapons/hl1/shotgun/dbarrel1.wav", 85, random( 85, 115 ), 1, CHAN_WEAPON )
-                self.l_WeaponUseCooldown = CurTime() + Rand( 1.5, 1.75 )
-
+                self.l_WeaponUseCooldown = CurTime() + 1.6
                 bulletData.Num = 12
-                bulletData.Spread = Vector( 0.2, 0.2, 0 )
             else
                 self.l_Clip = self.l_Clip - 1
                 wepent:EmitSound( "lambdaplayers/weapons/hl1/shotgun/sbarrel1.wav", 90, random( 93, 124 ), 1, CHAN_WEAPON )
-                self.l_WeaponUseCooldown = CurTime() + Rand( 0.8, 0.95 )
-                
+                self.l_WeaponUseCooldown = CurTime() + 0.85
                 bulletData.Num = 6
-                bulletData.Spread = Vector( 0.125, 0.125, 0 )
             end
 
             self:HandleMuzzleFlash( 1 )

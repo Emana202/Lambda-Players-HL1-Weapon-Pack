@@ -1,7 +1,9 @@
 local IsValid = IsValid
 local CurTime = CurTime
 local Rand = math.Rand
+local random = math.random
 local ents_Create = ents.Create
+local svGravity = GetConVar( "sv_gravity" )
 
 local TraceLine = util.TraceLine
 local trTbl = {}
@@ -36,37 +38,45 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         callback = function( self, wepent, target )            
-            trTbl.start = self:GetAttachmentPoint( "eyes" ).Pos
+            trTbl.start = wepent:GetAttachment( 1 ).Pos
             trTbl.endpos = target:GetPos()
             trTbl.filter = target
 
-            local spawnAng = ( trTbl.endpos - trTbl.start ):Angle()
-            trTbl.start = ( trTbl.start + spawnAng:Forward() * 32 + spawnAng:Right() * 8 - spawnAng:Up() * 16 )
-            spawnAng = ( trTbl.endpos - trTbl.start ):Angle()
-            if self:GetForward():Dot( spawnAng:Forward() ) < 0.33 then return end
+            local selfFwd = self:GetForward()
+            if selfFwd:Dot( ( trTbl.endpos - trTbl.start ):GetNormalized() ) < 0.66 then return end
 
-            if TraceLine( trTbl ).Fraction != 1.0 then 
+            local tr = TraceLine( trTbl )
+            if tr.Entity == self then self.l_WeaponUseCooldown = CurTime() + 0.25 return end
+
+            if tr.Fraction != 1.0 then 
                 trTbl.endpos = target:WorldSpaceCenter()
-                if TraceLine( trTbl ).Fraction != 1.0 then return end
+                if TraceLine( trTbl ).Fraction != 1.0 then self.l_WeaponUseCooldown = CurTime() + 0.25 return end
             end
 
             local rocket = ents_Create( "rpg_rocket" )
             if !IsValid( rocket ) then return end
 
             self.l_WeaponUseCooldown = CurTime() + 1.5
-            wepent:EmitSound( "lambdaplayers/weapons/hl1/rpg/rocketfire1.wav", SNDLVL_GUNFIRE, 100, 0.9, CHAN_WEAPON )
+            wepent:EmitSound( "lambdaplayers/weapons/hl1/rpg/rocketfire1.wav", 80, 100, 0.9, CHAN_WEAPON )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_RPG )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_RPG )
 
+            local spawnAng = ( trTbl.endpos - trTbl.start ):Angle()
+
             rocket:SetPos( trTbl.start )
-            rocket:SetAngles( ( trTbl.endpos - trTbl.start ):Angle() )
+            rocket:SetAngles( spawnAng )
             rocket:SetOwner( self )
             rocket:Spawn()
 
+            local svgravity = svGravity:GetInt()
+            if svgravity != 0 then rocket:SetGravity( 400 / svgravity ) end
+
             rocket.l_IsLambdaRocket = true
             rocket:SetModel( "models/lambdaplayers/weapons/hl1/props/rocket.mdl" )
-            rocket:CallOnRemove( "Lambda_HL1Rocket_StopSound" .. rocket:EntIndex(), function() rocket:StopSound( "lambdaplayers/weapons/hl1/rpg/rocket1.wav" ) end )
+
+            spawnAng.x = ( spawnAng.x - 30 )          
+            rocket:SetLocalVelocity( spawnAng:Forward() * 250 + selfFwd * self.loco:GetVelocity():Dot( selfFwd ) )
 
             wepent.CurrentRocket = rocket
             return true

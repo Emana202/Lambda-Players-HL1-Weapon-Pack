@@ -88,7 +88,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         clip = 100,
         callback = function( self, wepent, target )
-            if random( 1, 15 ) == 1 then
+            if random( 1, 10 ) == 1 then
                 self.l_WeaponUseCooldown = CurTime() + 0.5
 
                 if !wepent.ChargeSound then wepent.ChargeSound = CreateSound( wepent, "lambdaplayers/weapons/hl1/gauss/pulsemachine.wav" ) end

@@ -34,19 +34,19 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             if self.l_Clip <= 0 then self:ReloadWeapon() return end
 
             local shootPos = ( ( random( 1, 3 ) == 1 and explosiveCvar:GetBool() ) and target:GetPos() or target:WorldSpaceCenter() )
-            if random( 1, 3 ) == 1 and !self:IsInRange( shootPos, 256 ) then
+            if random( 1, 4 ) == 1 and !self:IsInRange( shootPos, 256 ) then
                 shootPos = shootPos + ( ( target:IsNextBot() and target.loco or target ):GetVelocity() * ( self:GetRangeTo( shootPos ) / 2000 ) )
             end
 
-            local spawnPos = self:GetAttachmentPoint( "eyes" ).Pos
+            local spawnPos = wepent:GetAttachment( 1 ).Pos
 
             local fireDir = ( shootPos - spawnPos ):Angle()
-            if self:GetForward():Dot( fireDir:Forward() ) < 0.33 then return true end
+            if self:GetForward():Dot( fireDir:Forward() ) < 0.66 then return true end
 
             local bolt = ents_Create( "crossbow_bolt" )
             if !IsValid( bolt ) then return end
 
-            self.l_WeaponUseCooldown = CurTime() + Rand( 0.75, 1.5 )
+            self.l_WeaponUseCooldown = CurTime() + Rand( 0.8, 1.5 )
 
             wepent:EmitSound( "lambdaplayers/weapons/hl1/crossbow/xbow_fire1.wav", 80, random( 93, 108 ), 1, CHAN_WEAPON )
             wepent:EmitSound( "lambdaplayers/weapons/hl1/crossbow/xbow_reload1.wav", SNDLVL_NORM, random( 93, 108 ), Rand( 0.95, 1.0 ), CHAN_ITEM )
@@ -77,7 +77,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                 bolt:EmitSound( "lambdaplayers/weapons/hl1/explode" .. random( 3, 5 ) .. ".wav", SNDLVL_140dB, 100, 1, CHAN_STATIC )
                 local validOwner = IsValid( self )
-                util_BlastDamage( ( validOwner and self:GetWeaponENT() or bolt ), ( validOwner and self or bolt ), bolt:GetPos(), 128, 40 )
+                local dmgPos = ( IsValid( bolt:GetTouchTrace().Entity ) and bolt:GetTouchTrace().Entity:WorldSpaceCenter() or bolt:GetPos() )
+                util_BlastDamage( ( validOwner and self:GetWeaponENT() or bolt ), ( validOwner and self or bolt ), dmgPos, 128, 40 )
             end )
 
             self.l_Clip = self.l_Clip - 1
