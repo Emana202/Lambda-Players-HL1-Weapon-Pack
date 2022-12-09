@@ -37,7 +37,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         callback = function( self, wepent, target )            
             trTbl.start = self:GetAttachmentPoint( "eyes" ).Pos
-            trTbl.endpos = ( target:GetPos() + ( target:IsNextBot() and target.loco or target ):GetVelocity() * Rand( 0.2, 0.8 ) )
+            trTbl.endpos = target:GetPos()
             trTbl.filter = target
 
             local spawnAng = ( trTbl.endpos - trTbl.start ):Angle()
