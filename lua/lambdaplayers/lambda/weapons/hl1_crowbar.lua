@@ -1,15 +1,11 @@
-if !IsMounted( "hl1" ) then return end
-
 local CurTime = CurTime
 local DamageInfo = DamageInfo
-
-local physBoxMins = Vector( 19, 8, 2.25 )
-local physBoxMaxs = Vector( -25, -2, -0.25 )
+local random = math.random
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     hl1_crowbar = {
-        model = "models/weapons/w_crowbar_hls.mdl",
+        model = "models/lambdaplayers/weapons/hl1/w_crowbar.mdl",
         origin = "Half-Life 1",
         prettyname = "Crowbar",
         holdtype = "melee",
@@ -18,12 +14,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 10,
         attackrange = 60,
-
-        OnDrop = function( cs_prop )
-            cs_prop:PhysicsInitBox( physBoxMins, physBoxMaxs )
-            cs_prop:PhysWake()
-            cs_prop:GetPhysicsObject():SetMaterial( "crowbar" )
-        end,
 
         callback = function( self, wepent, target )
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE )
@@ -38,7 +28,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             dmginfo:SetDamageForce( ( target:WorldSpaceCenter() - self:WorldSpaceCenter() ):GetNormalized() * dmg )
 
             target:TakeDamageInfo( dmginfo )
-            wepent:EmitSound( "HL1Weapon_Crowbar.Melee_Hit", 70 )
+            wepent:EmitSound( "lambdaplayers/weapons/hl1/crowbar/cbar_hitbod" .. random( 1, 3 ) .. ".wav", 75, random( 98, 102 ), 1, CHAN_WEAPON )
 
             self.l_WeaponUseCooldown = CurTime() + 0.25
             return true

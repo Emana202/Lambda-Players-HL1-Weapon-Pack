@@ -1,5 +1,3 @@
-if !IsMounted( "hl1" ) then return end
-
 local IsValid = IsValid
 local CurTime = CurTime
 local ipairs = ipairs
@@ -16,15 +14,12 @@ local ignorePlys = GetConVar( "ai_ignoreplayers" )
 local hornetMins, hornetMaxs = Vector( -4, -4, -4 ), Vector( 4, 4, 4 )
 local hornetClrRed, hornetClrOrange = Color(179, 39, 14, 128), Color(255, 128, 0, 128)
 
-local physBoxMins = Vector( -22, -7, -1.5 )
-local physBoxMaxs = Vector( 15, 3, 8 )
-
 local function OnDieTouch( self, ent )
     if self.l_DealtDamage or !ent or !ent:IsSolid() or ent:GetSolidFlags() == FSOLID_VOLUME_CONTENTS then return end
 
     local owner = self:GetOwner()
     if IsValid( owner ) and ent:Health() > 0 and ent:GetClass() != "nihilanth_energy_ball" then
-        self:EmitSound( "Hornet.Die" )
+        self:EmitSound( "lambdaplayers/weapons/hl1/hornetgun/ag_hornethit" .. random( 1, 3 ) .. ".wav", SNDLVL_NORM, 100, 1, CHAN_VOICE )
         local dmginfo = DamageInfo()
         dmginfo:SetAttacker( owner )
         dmginfo:SetInflictor( owner:GetWeaponENT() )
@@ -82,7 +77,7 @@ local function OnTrackThink( self )
     local flightDir = ( ( myVel:Length() < 0.1 ) and dirToEnemy or myVel:GetNormalized() )
 
     local delta = flightDir:Dot( dirToEnemy )
-    if delta < 0.5 then self:EmitSound( "Hornet.Buzz" ) end
+    if delta < 0.5 then self:EmitSound( "lambdaplayers/weapons/hl1/hornetgun/ag_buzz" .. random( 1, 3 ) .. ".wav", SNDLVL_NORM, 100, 0.8, CHAN_VOICE ) end
 
     local velDir = ( flightDir + dirToEnemy ):GetNormalized()
     if self.l_IsRed then
@@ -123,7 +118,7 @@ end
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     hl1_hornetgun = {
-        model = "models/weapons/w_hgun_hls.mdl",
+        model = "models/lambdaplayers/weapons/hl1/w_hornetgun.mdl",
         origin = "Half-Life 1",
         prettyname = "Hivehand",
         holdtype = "pistol",
@@ -131,12 +126,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 750,
         attackrange = 1500,
-
-        OnDrop = function( cs_prop )
-            cs_prop:PhysicsInitBox( physBoxMins, physBoxMaxs )
-            cs_prop:PhysWake()
-            cs_prop:GetPhysicsObject():SetMaterial( "weapon" )
-        end,
 
         OnEquip = function( self, wepent )
             wepent.UsingSecondaryFire = false
@@ -161,7 +150,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         clip = 8,
         callback = function( self, wepent, target )
             if wepent.HornetsLeft > 0 then
-                local spawnPos = self:GetAttachmentPoint( "eyes" ).Pos
+                local spawnPos = wepent:GetAttachment( 1 ).Pos
                 local spawnAng = ( target:WorldSpaceCenter() - spawnPos ):Angle()
                 if self:GetForward():Dot( spawnAng:Forward() ) < 0.33 then return true end
 
@@ -179,7 +168,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                         wepent.UsingSecondaryFire = false
                     end
 
-                    local spawnPos = ( spawnPos + spawnAng:Forward() * 24 + spawnAng:Right() * 8 + spawnAng:Up() * -12 )
                     if wepent.UsingSecondaryFire then
                         local curPhase = wepent.FirePhase
                         wepent.FirePhase = ( curPhase + 1 )
@@ -232,7 +220,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                     hornet:SetMoveType( MOVETYPE_FLY )
                     hornet:SetSolid( SOLID_BBOX )
                     hornet:SetHealth( 1 )
-                    hornet:SetModel( "models/hornet.mdl" )
+                    hornet:SetModel( "models/lambdaplayers/weapons/hl1/props/hornet.mdl" )
                     hornet:SetCollisionBounds( hornetMins, hornetMaxs )
                     hornet:ResetSequenceInfo()
                     hornet.OnTakeDamage = OnTakeDamage
@@ -240,7 +228,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                     local trailColor = ( hornet.l_IsRed and hornetClrRed or hornetClrOrange )
                     SpriteTrail( hornet, 0, trailColor, true, 4, 2, 1, 0.05, "sprites/laserbeam.vmt" )
 
-                    wepent:EmitSound( "Weapon_Hornetgun.Single", 70, 100, 1, CHAN_WEAPON )
+                    wepent:EmitSound( "lambdaplayers/weapons/hl1/hornetgun/ag_fire" .. random( 1, 3 ) .. ".wav", 75, 100, 1, CHAN_WEAPON )
 
                     self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_PISTOL )
                     self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_PISTOL )

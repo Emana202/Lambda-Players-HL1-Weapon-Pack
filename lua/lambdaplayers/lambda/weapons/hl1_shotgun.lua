@@ -1,5 +1,3 @@
-if !IsMounted( "hl1" ) then return end
-
 local IsValid = IsValid
 local CurTime = CurTime
 local Rand = math.Rand
@@ -7,8 +5,6 @@ local random = math.random
 
 local shellPos = Vector( -8, -1, 0 )
 local shellAng = Angle( 0, 90, 0 )
-local physBoxMins = Vector( -23, -3, 1 )
-local physBoxMaxs = Vector( 6, 6, 3 )
 
 local bulletData = {
     Damage = 5,
@@ -20,7 +16,7 @@ local bulletData = {
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     hl1_shotgun = {
-        model = "models/weapons/w_shotgun_hls.mdl",
+        model = "models/lambdaplayers/weapons/hl1/w_shotgun.mdl",
         origin = "Half-Life 1",
         prettyname = "SPAS-12",
         holdtype = "shotgun",
@@ -28,12 +24,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 400,
         attackrange = 600,
-
-        OnDrop = function( cs_prop )
-            cs_prop:PhysicsInitBox( physBoxMins, physBoxMaxs )
-            cs_prop:PhysWake()
-            cs_prop:GetPhysicsObject():SetMaterial( "weapon" )
-        end,
 
         clip = 8,
         reloadtime = 3,
@@ -52,14 +42,14 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN )
 
                 self.l_Clip = self.l_Clip - 2
-                wepent:EmitSound( "HL1Weapon_Shotgun.Double" )
+                wepent:EmitSound( "lambdaplayers/weapons/hl1/shotgun/dbarrel1.wav", 85, random( 85, 115 ), 1, CHAN_WEAPON )
                 self.l_WeaponUseCooldown = CurTime() + Rand( 1.5, 1.75 )
 
                 bulletData.Num = 12
                 bulletData.Spread = Vector( 0.2, 0.2, 0 )
             else
                 self.l_Clip = self.l_Clip - 1
-                wepent:EmitSound( "HL1Weapon_Shotgun.Single" )
+                wepent:EmitSound( "lambdaplayers/weapons/hl1/shotgun/sbarrel1.wav", 90, random( 93, 124 ), 1, CHAN_WEAPON )
                 self.l_WeaponUseCooldown = CurTime() + Rand( 0.8, 0.95 )
                 
                 bulletData.Num = 6
@@ -76,7 +66,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
             self:SimpleTimer( pumpTime, function()
                 if !IsValid( wepent ) or self:GetWeaponName() != "hl1_shotgun" then return end
-                wepent:EmitSound( "HL1Weapon_Shotgun.Special1" )
+                wepent:EmitSound( "lambdaplayers/weapons/hl1/shotgun/scock1.wav", SNDLVL_NORM, 100, 1, CHAN_ITEM )
                 self:HandleShellEject( "ShotgunShellEject", shellPos, shellAng )
             end)
 

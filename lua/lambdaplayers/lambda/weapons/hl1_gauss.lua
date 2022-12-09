@@ -1,5 +1,3 @@
-if !IsMounted( "hl1" ) then return end
-
 local IsValid = IsValid
 local CurTime = CurTime
 local EffectData = EffectData
@@ -11,18 +9,16 @@ local Rand = math.Rand
 local min = math.min
 local util_Decal = util.Decal
 local util_Effect = util.Effect
+
 local TraceLine = util.TraceLine
 local trTbl = {}
-
-local physBoxMins = Vector( -34, -3, 0 )
-local physBoxMaxs = Vector( 10, 4, 10 )
 
 local function FireBeam( lambda, wepent, pos, damage, rof )
     lambda.l_WeaponUseCooldown = CurTime() + ( rof or Rand( 0.2, 0.4 ) )
     lambda:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_REVOLVER )
     lambda:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_REVOLVER )
 
-    wepent:EmitSound( "Weapon_Gauss.Fire" )
+    wepent:EmitSound( "lambdaplayers/weapons/hl1/gauss/gauss2.wav", 90, random( 80, 111 ), 1, CHAN_WEAPON )
     wepent.AfterShockSound = CurTime() + Rand( 0.3, 0.8 )
 
     trTbl.start = wepent:GetAttachment( 1 ).Pos
@@ -60,7 +56,7 @@ end
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     hl1_gauss = {
-        model = "models/weapons/w_gauss_hls.mdl",
+        model = "models/lambdaplayers/weapons/hl1/w_gauss.mdl",
         origin = "Half-Life 1",
         prettyname = "Tau Cannon",
         holdtype = "shotgun",
@@ -68,12 +64,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 750,
         attackrange = 2000,
-
-        OnDrop = function( cs_prop )
-            cs_prop:PhysicsInitBox( physBoxMins, physBoxMaxs )
-            cs_prop:PhysWake()
-            cs_prop:GetPhysicsObject():SetMaterial( "weapon" )
-        end,
 
         OnEquip = function( self, wepent )
             wepent.AfterShockSound = 0
@@ -91,7 +81,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local shockSnd = wepent.AfterShockSound
             if shockSnd > 0 and CurTime() > shockSnd then
                 local rndSnd = random( 3, 6 )
-                if rndSnd > 3 then wepent:EmitSound( "weapons/electro" .. rndSnd .. ".wav", 100, 100, Rand( 0.7, 0.8 ), CHAN_AUTO ) end
+                if rndSnd > 3 then wepent:EmitSound( "lambdaplayers/weapons/hl1/gauss/electro" .. rndSnd .. ".wav", 100, 100, Rand( 0.7, 0.8 ), CHAN_AUTO ) end
                 wepent.AfterShockSound = 0
             end
         end,
@@ -101,7 +91,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             if random( 1, 15 ) == 1 then
                 self.l_WeaponUseCooldown = CurTime() + 0.5
 
-                if !wepent.ChargeSound then wepent.ChargeSound = CreateSound( wepent, "Weapon_Gauss.Spin" ) end
+                if !wepent.ChargeSound then wepent.ChargeSound = CreateSound( wepent, "lambdaplayers/weapons/hl1/gauss/pulsemachine.wav" ) end
                 wepent.ChargeSound:PlayEx( 0.7, 110 )
                 wepent.ChargeSound:ChangePitch( 250, 4 )
 

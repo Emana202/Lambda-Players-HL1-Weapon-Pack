@@ -1,5 +1,3 @@
-if !IsMounted( "hl1" ) then return end
-
 local IsValid = IsValid
 local CurTime = CurTime
 local Rand = math.Rand
@@ -8,9 +6,6 @@ local ents_Create = ents.Create
 local TraceLine = util.TraceLine
 local trTbl = {}
 
-local physBoxMins = Vector( -28, -5, 2 )
-local physBoxMaxs = Vector( 24, 3, 11 )
-
 if ( CLIENT ) then
     killicon.Add( "rpg_rocket", "lambdaplayers/killicons/icon_hl1_rpg", Color( 255, 80, 0, 255 ) )
 end
@@ -18,7 +13,7 @@ end
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     hl1_rpg = {
-        model = "models/weapons/w_rpg_hls.mdl",
+        model = "models/lambdaplayers/weapons/hl1/w_rpg.mdl",
         origin = "Half-Life 1",
         prettyname = "RPG",
         holdtype = "rpg",
@@ -26,12 +21,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 800,
         attackrange = 3000,
-
-        OnDrop = function( cs_prop )
-            cs_prop:PhysicsInitBox( physBoxMins, physBoxMaxs )
-            cs_prop:PhysWake()
-            cs_prop:GetPhysicsObject():SetMaterial( "weapon" )
-        end,
 
         OnEquip = function( lambda, wepent )
             wepent.CurrentRocket = NULL
@@ -48,15 +37,13 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         callback = function( self, wepent, target )            
             trTbl.start = self:GetAttachmentPoint( "eyes" ).Pos
-            trTbl.endpos = target:GetPos()
+            trTbl.endpos = ( target:GetPos() + ( target:IsNextBot() and target.loco or target ):GetVelocity() * Rand( 0.2, 0.8 ) )
             trTbl.filter = target
 
             local spawnAng = ( trTbl.endpos - trTbl.start ):Angle()
-            trTbl.start = ( trTbl.start + spawnAng:Forward() * 32 + spawnAng:Right() * 8 - spawnAng:Up() * 8 )
+            trTbl.start = ( trTbl.start + spawnAng:Forward() * 32 + spawnAng:Right() * 8 - spawnAng:Up() * 16 )
             spawnAng = ( trTbl.endpos - trTbl.start ):Angle()
-
-            local selfFwd = self:GetForward()
-            if selfFwd:Dot( spawnAng:Forward() ) < 0.33 then return end
+            if self:GetForward():Dot( spawnAng:Forward() ) < 0.33 then return end
 
             if TraceLine( trTbl ).Fraction != 1.0 then 
                 trTbl.endpos = target:WorldSpaceCenter()
@@ -67,15 +54,19 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             if !IsValid( rocket ) then return end
 
             self.l_WeaponUseCooldown = CurTime() + 1.5
-            wepent:EmitSound( "HL1Weapon_RPG.Single" )
+            wepent:EmitSound( "lambdaplayers/weapons/hl1/rpg/rocketfire1.wav", SNDLVL_GUNFIRE, 100, 0.9, CHAN_WEAPON )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_RPG )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_RPG )
 
             rocket:SetPos( trTbl.start )
-            rocket:SetAngles( spawnAng )
+            rocket:SetAngles( ( trTbl.endpos - trTbl.start ):Angle() )
             rocket:SetOwner( self )
             rocket:Spawn()
+
+            rocket.l_IsLambdaRocket = true
+            rocket:SetModel( "models/lambdaplayers/weapons/hl1/props/rocket.mdl" )
+            rocket:CallOnRemove( "Lambda_HL1Rocket_StopSound" .. rocket:EntIndex(), function() rocket:StopSound( "lambdaplayers/weapons/hl1/rpg/rocket1.wav" ) end )
 
             wepent.CurrentRocket = rocket
             return true

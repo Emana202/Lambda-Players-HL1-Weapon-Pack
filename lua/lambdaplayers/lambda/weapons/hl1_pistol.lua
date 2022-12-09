@@ -1,11 +1,9 @@
-if !IsMounted( "hl1" ) then return end
-
 local CurTime = CurTime
 local Rand = math.Rand
+local random = math.random
+
 local shellPos = Vector( 1, 4, 0 )
 local shellAng = Angle( 0, 90, 0 )
-local physBoxMins = Vector( 8, 6, 2.25 )
-local physBoxMaxs = Vector( -6, -6, -0.25 )
 
 local bulletData = {
     Damage = 8,
@@ -17,7 +15,7 @@ local bulletData = {
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     hl1_pistol = {
-        model = "models/weapons/w_9mmhandgun.mdl",
+        model = "models/lambdaplayers/weapons/hl1/w_9mmhandgun.mdl",
         origin = "Half-Life 1",
         prettyname = "9mm Pistol",
         holdtype = "revolver",
@@ -26,12 +24,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 650,
         attackrange = 1500,
 
-        OnDrop = function( cs_prop )
-            cs_prop:PhysicsInitBox( physBoxMins, physBoxMaxs )
-            cs_prop:PhysWake()
-            cs_prop:GetPhysicsObject():SetMaterial( "weapon" )
-        end,
-
         clip = 17,
         callback = function( self, wepent, target )
             if self.l_Clip <= 0 then self:ReloadWeapon() return end
@@ -39,7 +31,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local inQuickFireRange = self:IsInRange( target, 300 )
 
             self.l_WeaponUseCooldown = CurTime() + ( inQuickFireRange and 0.2 or Rand( 0.3, 0.4 ) )
-            wepent:EmitSound( "HL1Weapon_Glock.Single", 70, 100, 1, CHAN_WEAPON )
+            wepent:EmitSound( "lambdaplayers/weapons/hl1/9mmhandgun/pl_gun3.wav", 85, random( 95, 105 ), 1, CHAN_WEAPON )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_PISTOL )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_PISTOL )
@@ -64,8 +56,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         reloadanim = ACT_HL2MP_GESTURE_RELOAD_PISTOL,
         reloadanimspeed = 0.66,
         reloadsounds = { 
-            { 0.22, "Weapon_Glock.Special2" },
-            { 1.28, "Weapon_Glock.Special1" }
+            { 0.22, "lambdaplayers/weapons/hl1/9mmhandgun/9mmclip2.wav" },
+            { 1.28, "lambdaplayers/weapons/hl1/9mmhandgun/9mmclip1.wav" }
         },
 
         islethal = true

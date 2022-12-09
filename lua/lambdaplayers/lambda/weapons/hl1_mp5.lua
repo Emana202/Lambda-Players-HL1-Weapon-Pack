@@ -1,13 +1,8 @@
-if !IsMounted( "hl1" ) then return end
-
 local IsValid = IsValid
 local CurTime = CurTime
 local random = math.random
 local Rand = math.Rand
 local ents_Create = ents.Create
-
-local physBoxMins = Vector( 13, 14, 2.25 )
-local physBoxMaxs = Vector( -7, -16, -0.25 )
 
 if ( CLIENT ) then
     killicon.AddAlias( "grenade_mp5", "grenade_ar2" )
@@ -16,7 +11,7 @@ end
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     hl1_mp5 = {
-        model = "models/weapons/w_9mmar.mdl",
+        model = "models/lambdaplayers/weapons/hl1/w_9mmar.mdl",
         origin = "Half-Life 1",
         prettyname = "MP5",
         holdtype = "ar2",
@@ -24,12 +19,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 500,
         attackrange = 1000,
-
-        OnDrop = function( cs_prop )
-            cs_prop:PhysicsInitBox( physBoxMins, physBoxMaxs )
-            cs_prop:PhysWake()
-            cs_prop:GetPhysicsObject():SetMaterial( "weapon" )
-        end,
 
         clip = 50,
         tracername = "Tracer",
@@ -41,7 +30,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         shelloffpos = Vector( -2, -1, 0 ),
         shelloffang = Angle( 90, -90, 0 ),
         attackanim = ACT_HL2MP_GESTURE_RANGE_ATTACK_SMG1,
-        attacksnd = "HL1Weapon_MP5.Single",
+        attacksnd = "lambdaplayers/weapons/hl1/9mmar/hks*3*.wav",
 
         callback = function( self, wepent, target )
             if random( 50 ) != 1 or !self:IsInRange( target, 1000 ) then return end
@@ -54,7 +43,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_REVOLVER )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_REVOLVER )
 
-            wepent:EmitSound( "HL1Weapon_MP5.Double", 70, 100, 1, CHAN_WEAPON )
+            local gLaunchSnd = "lambdaplayers/weapons/hl1/9mmar/glauncher" .. ( random( 1, 2 ) == 2 and 2 or "" ) .. ".wav"
+            wepent:EmitSound( gLaunchSnd, 75, random( 94, 110 ), 1, CHAN_WEAPON )
 
             local offsetZ = ( self:GetRangeTo( target ) / random( 6, 7 ) )
             local vecThrow = ( ( target:GetPos() + target:GetUp() * offsetZ ) - wepent:GetPos() ):Angle()
@@ -65,6 +55,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             grenade:Spawn()
             grenade:Activate()
 
+            grenade:SetModel( "models/lambdaplayers/weapons/hl1/props/9mmar_grenade.mdl" )
             grenade:SetMoveType(MOVETYPE_FLYGRAVITY)
             grenade:SetVelocity( vecThrow:Forward() * 800 )
             grenade:SetLocalAngularVelocity( Angle( -Rand( -100, -500 ), 0, 0 ) )
@@ -76,8 +67,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         reloadanim = ACT_HL2MP_GESTURE_RELOAD_AR2,
         reloadanimspeed = 1.33,
         reloadsounds = { 
-            { 0.17, "Weapon_MP5.Special1" },
-            { 0.80, "Weapon_MP5.Special2" }
+            { 0.17, "lambdaplayers/weapons/hl1/9mmar/cliprelease1.wav" },
+            { 0.80, "lambdaplayers/weapons/hl1/9mmar/clipinsert1.wav" }
         },
 
         islethal = true

@@ -1,5 +1,3 @@
-if !IsMounted( "hl1" ) then return end
-
 local IsValid = IsValid
 local CurTime = CurTime
 local EffectData = EffectData
@@ -8,17 +6,7 @@ local Rand = math.Rand
 local ents_Create = ents.Create
 local util_Effect = util.Effect
 local util_BlastDamage = util.BlastDamage
-
-local physBoxMins = Vector( -28, -12, -4.5 )
-local physBoxMaxs = Vector( 16, 14, 5 )
-
 local explosiveCvar = CreateLambdaConvar( "lambdaplayers_weapons_hl1crossbow_explosivebolts", 1, true, false, true, "If HL1 Crossbow's bolts should be able to explode on impact.", 0, 1, { type = "Bool", name = "HL1 Crossbow - Enable Explosive Bolts", category = "Weapon Utilities" } )
-local function BoltExplode( lambda, pos )
-    local effectData = EffectData()
-    effectData:SetOrigin( pos )
-    util_Effect( "Explosion", effectData )
-    util_BlastDamage( lambda:GetWeaponENT(), lambda, pos, 128, 40 )
-end
 
 hook.Add( "EntityTakeDamage", "Lambda_HL1Crossbow_HackKillIcon", function( ent, dmginfo )
     local inflictor = dmginfo:GetInflictor()
@@ -29,27 +17,10 @@ hook.Add( "EntityTakeDamage", "Lambda_HL1Crossbow_HackKillIcon", function( ent, 
     dmginfo:SetInflictor( owner:GetWeaponENT() )
 end )
 
-hook.Add( "EntityEmitSound", "Lambda_HL1Crossbow_CheckRicochets", function( data )
-    if data.OriginalSoundName != "Weapon_Crossbow.BoltHitWorld" then return end
-
-    local ent = data.Entity
-    if !ent or !ent.l_IsLambdaBolt then return end
-    
-    ent:SetMoveType( MOVETYPE_NONE )
-    ent:RemoveCallOnRemove( ent.l_RemoveCall )
-
-    if explosiveCvar:GetBool() then
-        local owner = ent:GetOwner()
-        BoltExplode( ( IsValid( owner ) and owner or ent ), ent:GetPos() )
-    end
-
-    ent:Remove()
-end )
-
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     hl1_crossbow = {
-        model = "models/weapons/w_crossbow_hls.mdl",
+        model = "models/lambdaplayers/weapons/hl1/w_crossbow.mdl",
         origin = "Half-Life 1",
         prettyname = "Crossbow",
         holdtype = "crossbow",
@@ -57,12 +28,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 750,
         attackrange = 1500,
-
-        OnDrop = function( cs_prop )
-            cs_prop:PhysicsInitBox( physBoxMins, physBoxMaxs )
-            cs_prop:PhysWake()
-            cs_prop:GetPhysicsObject():SetMaterial( "weapon" )
-        end,
 
         clip = 5,
         callback = function( self, wepent, target )
@@ -83,8 +48,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
             self.l_WeaponUseCooldown = CurTime() + Rand( 0.75, 1.5 )
 
-            wepent:EmitSound( "HL1Weapon_Crossbow.Single" )
-            wepent:EmitSound( "HL1Weapon_Crossbow.Reload" )
+            wepent:EmitSound( "lambdaplayers/weapons/hl1/crossbow/xbow_fire1.wav", 80, random( 93, 108 ), 1, CHAN_WEAPON )
+            wepent:EmitSound( "lambdaplayers/weapons/hl1/crossbow/xbow_reload1.wav", SNDLVL_NORM, random( 93, 108 ), Rand( 0.95, 1.0 ), CHAN_ITEM )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_CROSSBOW )
@@ -97,14 +62,22 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             bolt.l_IsLambdaBolt = true
             bolt.l_RemoveCall = "Lambda_HL1CrossbowBolt_OnRemoval" .. bolt:EntIndex()
 
-            bolt:SetSkin( 0 )
+            bolt:SetModel( "models/lambdaplayers/weapons/hl1/props/crossbow_bolt.mdl" )
             bolt:Fire( "SetDamage", ( explosiveCvar:GetBool() and "10" or "50" ) )
             bolt:SetMoveType( MOVETYPE_FLY )
             bolt:SetVelocity( fireDir:Forward() * ( bolt:WaterLevel() == 3 and 1000 or 2000 ) )
             bolt:SetLocalAngularVelocity( Angle( 0, 0, 10 ) )
             bolt:CallOnRemove( bolt.l_RemoveCall, function() 
                 if !explosiveCvar:GetBool() then return end
-                BoltExplode( ( IsValid( self ) and self or bolt ), bolt:GetPos() )
+
+                local effectData = EffectData()
+                effectData:SetOrigin( bolt:GetPos() )
+                effectData:SetFlags( 128 )
+                util_Effect( "Explosion", effectData )
+
+                bolt:EmitSound( "lambdaplayers/weapons/hl1/explode" .. random( 3, 5 ) .. ".wav", SNDLVL_140dB, 100, 1, CHAN_STATIC )
+                local validOwner = IsValid( self )
+                util_BlastDamage( ( validOwner and self:GetWeaponENT() or bolt ), ( validOwner and self or bolt ), bolt:GetPos(), 128, 40 )
             end )
 
             self.l_Clip = self.l_Clip - 1
@@ -113,8 +86,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         reloadtime = 4.5,
         reloadanim = ACT_HL2MP_GESTURE_RELOAD_SMG1,
-        reloadanimspeed = 0.5,
-        reloadsounds = { { 0, "HL1Weapon_Crossbow.Reload" } },
+        reloadanimspeed = 0.4,
+        reloadsounds = { { 0, "lambdaplayers/weapons/hl1/crossbow/xbow_reload1.wav" } },
 
         islethal = true
     }

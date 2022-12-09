@@ -1,9 +1,6 @@
-if !IsMounted( "hl1" ) then return end
-
 local CurTime = CurTime
+local random = math.random
 local Rand = math.Rand
-local physBoxMins = Vector( 6, 5, 1.75 )
-local physBoxMaxs = Vector( -9.5, -3, -0.75 )
 
 local bulletData = {
     Damage = 40,
@@ -16,7 +13,7 @@ local bulletData = {
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     hl1_revolver = {
-        model = "models/weapons/w_357_hls.mdl",
+        model = "models/lambdaplayers/weapons/hl1/w_357.mdl",
         origin = "Half-Life 1",
         prettyname = ".357 Magnum",
         holdtype = "pistol",
@@ -25,18 +22,12 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 750,
         attackrange = 2000,
 
-        OnDrop = function( cs_prop )
-            cs_prop:PhysicsInitBox( physBoxMins, physBoxMaxs )
-            cs_prop:PhysWake()
-            cs_prop:GetPhysicsObject():SetMaterial( "weapon" )
-        end,
-
         clip = 6,
         callback = function( self, wepent, target )
             if self.l_Clip <= 0 then self:ReloadWeapon() return end
 
             self.l_WeaponUseCooldown = CurTime() + Rand( 0.8, 1.2 )
-            wepent:EmitSound( "HL1Weapon_357.Single", 70, 100, 1, CHAN_WEAPON )
+            wepent:EmitSound( "lambdaplayers/weapons/hl1/357/357_shot" .. random( 1, 2 ) .. ".wav", 90, random( 95, 105 ), 1, CHAN_WEAPON )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_REVOLVER )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_REVOLVER )
@@ -55,7 +46,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         reloadtime = 3.05,
-        reloadsounds = { { 2, "HL1Weapon_357.Reload" } },
+        reloadsounds = { { 2, "lambdaplayers/weapons/hl1/357/357_reload1.wav" } },
 
         OnReload = function( self, wepent )
             local animLayer

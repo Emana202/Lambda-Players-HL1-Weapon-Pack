@@ -1,5 +1,3 @@
-if !IsMounted( "hl1" ) then return end
-
 local IsValid = IsValid
 local CurTime = CurTime
 local EffectData = EffectData
@@ -17,9 +15,6 @@ local trTbl = {}
 
 local vec3_origin = Vector()
 local vec3_angles = Angle()
-
-local physBoxMins = Vector( -2, -0.5, 0 )
-local physBoxMaxs = Vector( 1.5, 3, 6 )
 
 local function OnGrenadeTouch( self, ent )
     if ent == self:GetOwner() or !ent:IsSolid() or ent:GetSolidFlags() == FSOLID_VOLUME_CONTENTS then return end
@@ -45,7 +40,7 @@ local function OnGrenadeTouch( self, ent )
     local velRate = ( selfVel:Length() / 200 )
     self:SetPlaybackRate( ( velRate > 1 ) and 1 or ( ( velRate < 0.5 ) and 0 or velRate ) )
 
-    self:EmitSound( "Weapon_HandGrenade.GrenadeBounce" )
+    self:EmitSound( "lambdaplayers/weapons/hl1/grenade/grenade_hit" .. random( 1, 3 ) .. ".wav", 70, 100, 0.25, CHAN_VOICE )
 end
 
 local function ExplodeGrenade( self )
@@ -69,8 +64,8 @@ local function ExplodeGrenade( self )
 
     local effectData = EffectData()
     effectData:SetOrigin( hitpos )
-    effectData:SetScale( 1 )
     util_Effect( "Explosion", effectData, true, true )
+    self:EmitSound( "lambdaplayers/weapons/hl1/explode" .. random( 3, 5 ) .. ".wav", 140, 100, 1, CHAN_STATIC )
 
     local owner = self:GetOwner()
     util_BlastDamage( ( IsValid( owner ) and owner:GetWeaponENT() or self ), ( IsValid( owner ) and owner or self ), selfPos, 250, 100 )
@@ -82,7 +77,7 @@ end
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
     hl1_handgrenade = {
-        model = "models/weapons/w_grenade_hls.mdl",
+        model = "models/lambdaplayers/weapons/hl1/w_grenade.mdl",
         origin = "Half-Life 1",
         prettyname = "Hand Grenade",
         holdtype = "grenade",
@@ -90,12 +85,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 650,
         attackrange = 1000,
-
-        OnDrop = function( cs_prop )
-            cs_prop:PhysicsInitBox( physBoxMins, physBoxMaxs )
-            cs_prop:PhysWake()
-            cs_prop:GetPhysicsObject():SetMaterial( "weapon" )
-        end,
 
         clip = 10,
         callback = function( self, wepent, target )
@@ -116,12 +105,12 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 local grenade = ents_Create( "base_anim" )
                 if !IsValid( grenade ) then return end
 
-                local throwPos = ( LambdaIsValid( target ) and target:GetPos() or ( self:GetPos() + self:GetForward() * 500 ) )
+                local throwPos = ( LambdaIsValid( target ) and ( target:GetPos() + ( target:IsNextBot() and target.loco or target ):GetVelocity() * 0.5 ) or ( self:GetPos() + self:GetForward() * 500 ) )
                 local offsetZ = ( self:GetRangeTo( throwPos ) / 3 )
                 local spawnPos = self:GetAttachmentPoint( "eyes" ).Pos
                 local vecThrow = ( ( throwPos + Vector( 0, 0, offsetZ ) ) - spawnPos ):Angle()
 
-                grenade:SetModel( "models/w_grenade.mdl" )
+                grenade:SetModel( "models/lambdaplayers/weapons/hl1/props/handgrenade.mdl" )
                 grenade:SetPos( spawnPos )
                 grenade:SetAngles( Angle( 0, 0, 60 ) ) 
                 grenade:SetOwner( self )
