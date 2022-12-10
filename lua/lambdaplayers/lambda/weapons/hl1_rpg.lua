@@ -4,9 +4,11 @@ local Rand = math.Rand
 local random = math.random
 local ents_Create = ents.Create
 local svGravity = GetConVar( "sv_gravity" )
-
 local TraceLine = util.TraceLine
 local trTbl = {}
+local laserMat = Material( "lambdaplayers/sprites/hl1_laserdot" )
+
+local laserEnabled = CreateLambdaConvar( "lambdaplayers_weapons_hl1rpg_enablelaserguidance", 1, true, false, true, "Enables HL1 RPG's laser guidance system.", 0, 1, { type = "Bool", name = "HL1 RPG - Enable Laser Guidance", category = "Weapon Utilities" } )
 
 if ( CLIENT ) then
     killicon.Add( "rpg_rocket", "lambdaplayers/killicons/icon_hl1_rpg", Color( 255, 80, 0, 255 ) )
@@ -23,6 +25,21 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         bonemerge = true,
         keepdistance = 800,
         attackrange = 3000,
+
+        Draw = function( self, wepent )
+            if !laserEnabled:GetBool() then return end
+
+            local attachData = wepent:GetAttachment( 1 )
+            trTbl.start = attachData.Pos
+            trTbl.endpos = attachData.Pos + attachData.Ang:Forward() * 32756
+            trTbl.filter = { self, wepent }
+            
+            local trDot = TraceLine( trTbl )
+            if trDot.HitSky then return end
+
+            render.SetMaterial( laserMat )
+            render.DrawSprite( trDot.HitPos + trDot.HitNormal * 3 - EyeVector() * 4, 16, 16, color_white ) 
+        end,
 
         callback = function( self, wepent, target )            
             trTbl.start = wepent:GetAttachment( 1 ).Pos
@@ -56,14 +73,49 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             rocket:SetOwner( self )
             rocket:Spawn()
 
-            local svgravity = svGravity:GetInt()
-            if svgravity != 0 then rocket:SetGravity( 400 / svgravity ) end
+            local gravity = svGravity:GetInt()
+            if gravity != 0 then rocket:SetGravity( 400 / gravity ) end
 
             rocket.l_IsLambdaRocket = true
             rocket:SetModel( "models/lambdaplayers/weapons/hl1/props/rocket.mdl" )
 
             spawnAng.x = ( spawnAng.x - 30 )          
             rocket:SetLocalVelocity( spawnAng:Forward() * 250 + selfFwd * self.loco:GetVelocity():Dot( selfFwd ) )
+
+            if laserEnabled:GetBool() then
+                local nextTargetTime = CurTime() + 0.4
+                local fullIgnitionTime = CurTime() + 1.4
+
+                rocket:LambdaHookTick( "Lambda_HL1Rocket_LaserGuidance", function()
+                    if !LambdaIsValid( self ) or !IsValid( wepent ) or self:GetWeaponName() != "hl1_rpg" or !laserEnabled:GetBool() then return true end
+                    if CurTime() <= nextTargetTime then return end
+
+                    local attachData = wepent:GetAttachment( 1 )
+                    trTbl.start = attachData.Pos
+                    trTbl.filter = { self, wepent, rocket }
+
+                    local ene = self:GetEnemy()
+                    if LambdaIsValid( ene ) then
+                        trTbl.endpos = attachData.Pos + ( ene:GetPos() - attachData.Pos ):GetNormalized() * 32756
+                    else
+                        trTbl.endpos = attachData.Pos + attachData.Ang:Forward() * 32756
+                    end
+                    vecTarget = ( TraceLine( trTbl ).HitPos - trTbl.start ):GetNormalized()
+
+                    rocket:SetAngles( vecTarget:Angle() )
+
+                    local speed = rocket:GetVelocity():Length()
+                    if CurTime() < fullIgnitionTime then
+                        rocket:SetLocalVelocity( rocket:GetVelocity() * 0.2 + vecTarget * speed * 0.798 )
+                    else
+                        rocket:SetLocalVelocity( rocket:GetVelocity() * 0.2 + vecTarget * ( speed * 0.8 + 400 ) )
+                        local speedLimit = ( rocket:WaterLevel() == 3 and 300 or 2000 )
+                        if rocket:GetVelocity():Length() > speedLimit then rocket:SetLocalVelocity( rocket:GetVelocity():GetNormalized() * speedLimit ) end
+                    end
+
+                    nextTargetTime = CurTime() + 0.1
+                end )
+            end
 
             return true
         end,

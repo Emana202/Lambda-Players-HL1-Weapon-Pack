@@ -1,0 +1,7 @@
+"UnlitGeneric"
+{
+	"$basetexture" "lambdaplayers/sprites/hl1_laserdot"
+	"$vertexalpha" 1
+	"$additive" 1
+	"$color" "[2 2 2]"
+}
