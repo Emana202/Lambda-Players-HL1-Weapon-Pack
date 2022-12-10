@@ -77,8 +77,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                 bolt:EmitSound( "lambdaplayers/weapons/hl1/explode" .. random( 3, 5 ) .. ".wav", SNDLVL_140dB, 100, 1, CHAN_STATIC )
                 local validOwner = IsValid( self )
-                local dmgPos = ( IsValid( bolt:GetTouchTrace().Entity ) and bolt:GetTouchTrace().Entity:WorldSpaceCenter() or bolt:GetPos() )
-                util_BlastDamage( ( validOwner and self:GetWeaponENT() or bolt ), ( validOwner and self or bolt ), dmgPos, 128, 40 )
+                util_BlastDamage( ( validOwner and self:GetWeaponENT() or bolt ), ( validOwner and self or bolt ), bolt:GetPos(), 128, 40 )
             end )
 
             self.l_Clip = self.l_Clip - 1
