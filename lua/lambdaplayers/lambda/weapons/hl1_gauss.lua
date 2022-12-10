@@ -13,43 +13,58 @@ local util_Effect = util.Effect
 local TraceLine = util.TraceLine
 local trTbl = {}
 
-local function FireBeam( lambda, wepent, pos, damage, rof )
-    lambda.l_WeaponUseCooldown = CurTime() + ( rof or Rand( 0.2, 0.4 ) )
-    lambda:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_REVOLVER )
-    lambda:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_REVOLVER )
+local function FireBeam( lambda, wepent, pos, secondaryFire )
+    lambda.l_WeaponUseCooldown = CurTime() + ( !secondaryFire and Rand( 0.2, 0.4 ) or Rand( 0.66, 1.0 ) )
+    lambda:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_PISTOL )
+    lambda:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_PISTOL )
 
     wepent:EmitSound( "lambdaplayers/weapons/hl1/gauss/gauss2.wav", 90, random( 80, 111 ), 1, CHAN_WEAPON )
     wepent.AfterShockSound = CurTime() + Rand( 0.3, 0.8 )
 
-    trTbl.start = wepent:GetAttachment( 1 ).Pos
-    trTbl.endpos = ( trTbl.start + ( pos - trTbl.start ):GetNormalized() * 8192 + VectorRand( -200, 200 ) )
-    trTbl.filter = { lambda, wepent }
+    local fireStart = wepent:GetAttachment( 1 ).Pos
+    local fireDir = ( pos - fireStart ):Angle()
+    
+    local accuracyDecay = ( 400 * ( lambda:GetRangeSquaredTo( pos ) / ( 1024 * 1024 ) ) )
+    if secondaryFire then accuracyDecay = accuracyDecay * 0.5 end
+    local fireEnd = ( fireStart + fireDir:Forward() * 8192 + fireDir:Right() * random( -accuracyDecay, accuracyDecay ) + fireDir:Up() * random( -accuracyDecay, accuracyDecay ) )
+
+    trTbl.start = fireStart
+    trTbl.endpos = fireEnd
+    trTbl.filter = lambda
     local tr = TraceLine( trTbl )
 
     local beameffect = EffectData()
-    beameffect:SetFlags( 1 )
-    beameffect:SetStart( tr.StartPos )
+    beameffect:SetFlags( secondaryFire and 0 or 1 )
+    beameffect:SetStart( fireStart )
     beameffect:SetOrigin( tr.HitPos )
     util_Effect( "HL1GaussBeamReflect", beameffect )
 
     util_Decal( "FadingScorch", tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal )
 
+    local balleffect = EffectData()
+    balleffect:SetOrigin( tr.HitPos )
+    balleffect:SetNormal( tr.HitNormal )
+    util_Effect( "HL1GaussReflect", balleffect )
+
     local hitEnt = tr.Entity
     if !IsValid( hitEnt ) then return end
     
+    local damage = ( secondaryFire and min( 200, 200 * ( ( ( CurTime() - wepent.ChargeStartTime ) ) * 0.25 ) ) or 20 )
+
     if hitEnt:Health() > 0 then
         local dmginfo = DamageInfo()
         dmginfo:SetAttacker( lambda )
         dmginfo:SetInflictor( wepent )
-        dmginfo:SetDamage( damage or 20 )
+        dmginfo:SetDamage( damage )
         dmginfo:SetDamageType( DMG_ENERGYBEAM )
-        dmginfo:SetDamageForce( lambda:GetForward() * 16000 )
+        dmginfo:SetDamageForce( fireDir:Forward() * damage * 600 )
+        dmginfo:SetDamagePosition( tr.HitPos )
         hitEnt:DispatchTraceAttack( dmginfo, tr )
     end
 
     if !hitEnt:IsPlayer() then
         local phys = hitEnt:GetPhysicsObject()
-        if IsValid( phys ) then phys:ApplyForceOffset( lambda:GetForward() * 4000, tr.HitPos ) end
+        if IsValid( phys ) then phys:ApplyForceOffset( fireDir:Forward() * damage * 200, tr.HitPos ) end
     end
 end
 
@@ -67,6 +82,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         OnEquip = function( self, wepent )
             wepent.AfterShockSound = 0
+            wepent.ChargeStartTime = 0
             wepent:CallOnRemove( "Lambda_HL1Gauss_StopChargeSound" .. wepent:EntIndex(), function()
                 if wepent.ChargeSound then wepent.ChargeSound:Stop(); wepent.ChargeSound = nil end
             end )
@@ -74,6 +90,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         OnUnequip = function( self, wepent )
             wepent.AfterShockSound = nil
+            wepent.ChargeStartTime = nil
             wepent:RemoveCallOnRemove( "Lambda_HL1Gauss_StopChargeSound" .. wepent:EntIndex() )
         end,
 
@@ -95,7 +112,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 wepent.ChargeSound:PlayEx( 0.7, 110 )
                 wepent.ChargeSound:ChangePitch( 250, 4 )
 
-                local startTime = CurTime()
+                wepent.ChargeStartTime = CurTime()
+
                 local chargeTime = Rand( 1, 4 )
                 local startHealth = self:Health()
                 self:Hook( "Think", "LambdaPlayer_HL1Gauss_SecondaryFire", function()
@@ -108,14 +126,14 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                     self.l_WeaponUseCooldown = CurTime() + 0.5
 
                     local fireTarget = self:GetEnemy()
-                    local holdTime = ( CurTime() - startTime )
+                    local holdTime = ( CurTime() - wepent.ChargeStartTime )
 
                     if holdTime >= ( chargeTime * ( self:CanSee( fireTarget ) and 1 or Rand( 1.75, 2.5 ) ) ) or !LambdaIsValid( fireTarget ) or self:Health() < ( startHealth * 0.5 ) then
                         wepent.ChargeSound:Stop()
                         wepent.ChargeSound = nil
 
                         local firePos = ( LambdaIsValid( fireTarget ) and fireTarget:WorldSpaceCenter() or ( self:WorldSpaceCenter() + self:GetForward() * 8192 ) )
-                        FireBeam( self, wepent, firePos, min( 200, 200 * ( holdTime * 0.25 ) ), Rand( 0.66, 1.0 ) )
+                        FireBeam( self, wepent, firePos, true )
 
                         return "end"
                     end
