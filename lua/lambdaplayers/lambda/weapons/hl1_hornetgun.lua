@@ -14,12 +14,16 @@ local ignorePlys = GetConVar( "ai_ignoreplayers" )
 local hornetMins, hornetMaxs = Vector( -4, -4, -4 ), Vector( 4, 4, 4 )
 local hornetClrRed, hornetClrOrange = Color(179, 39, 14, 128), Color(255, 128, 0, 128)
 
+local function IsValidEnemy( ent )
+    return ( LambdaIsValid( ent ) and ent:Health() > 0 and ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and ent:Alive() and !ignorePlys:GetBool() ) )
+end
+
 local function OnDieTouch( self, ent )
     if self.l_DealtDamage or !ent or !ent:IsSolid() or ent:GetSolidFlags() == FSOLID_VOLUME_CONTENTS then return end
 
     local owner = self:GetOwner()
     if IsValid( owner ) and ent:Health() > 0 and ent:GetClass() != "nihilanth_energy_ball" then
-        self:EmitSound( "lambdaplayers/weapons/hl1/hornetgun/ag_hornethit" .. random( 1, 3 ) .. ".wav", SNDLVL_NORM, 100, 1, CHAN_VOICE )
+        self:EmitSound( "lambdaplayers/weapons/hl1/hornetgun/ag_hornethit" .. random( 1, 3 ) .. ".wav", 75, 100, 1, CHAN_VOICE )
         local dmginfo = DamageInfo()
         dmginfo:SetAttacker( owner )
         dmginfo:SetInflictor( owner:GetWeaponENT() )
@@ -50,23 +54,29 @@ local function OnTrackThink( self )
     local myPos = self:GetPos()
     local myVel = self:GetVelocity()
 
-    if !LambdaIsValid( self.l_Enemy ) then
-        local lastDist = math.huge
+    local enemy = self.l_Enemy
+    if !IsValidEnemy( enemy ) then
         local myOwner = self:GetOwner()
+        local myFwd = self:GetForward()
+
+        local lastDist = nil
         for _, v in ipairs( FindInSphere( myPos, 512 ) ) do
-            if !LambdaIsValid( v ) or v == myOwner or v:Health() <= 0 or !v:IsNPC() and !v:IsNextBot() and ( !v:IsPlayer() or !v:Alive() or ignorePlys:GetBool() ) or !self:Visible( v ) then
-                continue
-            end
+            if v == myOwner or !IsValidEnemy( v ) or !self:Visible( v ) then continue end
 
-            local curDist = myPos:DistToSqr( v:WorldSpaceCenter() )
-            if curDist >= lastDist then continue end
+            local targPos = v:WorldSpaceCenter()
+            local targDot = myFwd:Dot( ( targPos - myPos ):GetNormalized() )
+            if targDot <= 0.9 then continue end
 
-            self.l_Enemy = v
+            local curDist = myPos:DistToSqr( targPos )
+            if lastDist and curDist >= lastDist then continue end
+
+            enemy = v
             lastDist = curDist
         end
+        
+        self.l_Enemy = enemy
     end
 
-    local enemy = self.l_Enemy
     if LambdaIsValid( enemy ) and self:Visible( enemy ) then
         self.l_EnemyLKP = enemy:WorldSpaceCenter()
     else
@@ -77,7 +87,7 @@ local function OnTrackThink( self )
     local flightDir = ( ( myVel:Length() < 0.1 ) and dirToEnemy or myVel:GetNormalized() )
 
     local delta = flightDir:Dot( dirToEnemy )
-    if delta < 0.5 then self:EmitSound( "lambdaplayers/weapons/hl1/hornetgun/ag_buzz" .. random( 1, 3 ) .. ".wav", SNDLVL_NORM, 100, 0.8, CHAN_VOICE ) end
+    if delta < 0.5 then self:EmitSound( "lambdaplayers/weapons/hl1/hornetgun/ag_buzz" .. random( 1, 3 ) .. ".wav", 70, 100, 0.8, CHAN_VOICE ) end
 
     local velDir = ( flightDir + dirToEnemy ):GetNormalized()
     if self.l_IsRed then

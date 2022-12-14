@@ -31,14 +31,29 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
             local attachData = wepent:GetAttachment( 1 )
             trTbl.start = attachData.Pos
-            trTbl.endpos = attachData.Pos + attachData.Ang:Forward() * 32756
-            trTbl.filter = { self, wepent }
-            
+            trTbl.endpos = ( attachData.Pos + attachData.Ang:Forward() * 32756 )
+            trTbl.filter = { self, wepent, wepent.CurrentRocket }
+
             local trDot = TraceLine( trTbl )
             if trDot.HitSky then return end
 
             render.SetMaterial( laserMat )
-            render.DrawSprite( trDot.HitPos + trDot.HitNormal * 3 - EyeVector() * 4, 16, 16, color_white ) 
+            render.DrawSprite( ( trDot.HitPos + trDot.HitNormal * 3 - EyeVector() * 4 ), 16, 16, color_white ) 
+        end,
+
+        OnEquip = function( self, wepent )
+            wepent.CurrentRocket = NULL
+        end,
+
+        OnUnequip = function( self, wepent )
+            wepent.CurrentRocket = nil
+        end,
+
+        OnThink = function( self, wepent )
+            if ( self.l_WeaponUseCooldown - CurTime() ) <= 2.0 and IsValid( wepent.CurrentRocket ) then
+                self.l_WeaponUseCooldown = CurTime() + 2.0
+            end
+            return 0.1
         end,
 
         callback = function( self, wepent, target )            
@@ -83,11 +98,17 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             rocket:SetLocalVelocity( spawnAng:Forward() * 250 + selfFwd * self.loco:GetVelocity():Dot( selfFwd ) )
 
             if laserEnabled:GetBool() then
+                wepent.CurrentRocket = rocket
+                self.l_WeaponUseCooldown = self.l_WeaponUseCooldown + 2.0
+
                 local nextTargetTime = CurTime() + 0.4
                 local fullIgnitionTime = CurTime() + 1.4
 
                 rocket:LambdaHookTick( "Lambda_HL1Rocket_LaserGuidance", function()
-                    if !LambdaIsValid( self ) or !IsValid( wepent ) or self:GetWeaponName() != "hl1_rpg" or !laserEnabled:GetBool() then return true end
+                    if !LambdaIsValid( self ) or !IsValid( wepent ) or self:GetWeaponName() != "hl1_rpg" or !laserEnabled:GetBool() then 
+                        if IsValid( wepent ) then wepent.CurrentRocket = NULL end
+                        return true 
+                    end
                     if CurTime() <= nextTargetTime then return end
 
                     local attachData = wepent:GetAttachment( 1 )
