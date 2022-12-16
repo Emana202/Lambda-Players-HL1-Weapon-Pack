@@ -10,6 +10,8 @@ local min = math.min
 local util_Decal = util.Decal
 local util_Effect = util.Effect
 
+local chargeSnd = Sound( "lambdaplayers/weapons/hl1/gauss/pulsemachine.wav" )
+
 local TraceLine = util.TraceLine
 local trTbl = {}
 
@@ -84,7 +86,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             wepent.AfterShockSound = 0
             wepent.ChargeStartTime = 0
             wepent:CallOnRemove( "Lambda_HL1Gauss_StopChargeSound" .. wepent:EntIndex(), function()
-                if wepent.ChargeSound then wepent.ChargeSound:Stop(); wepent.ChargeSound = nil end
+                if wepent.ChargeSound then wepent.ChargeSound:Stop() end
             end )
         end,
 
@@ -96,7 +98,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         OnThink = function( self, wepent )
             local shockSnd = wepent.AfterShockSound
-            if shockSnd > 0 and CurTime() > shockSnd then
+            if shockSnd and shockSnd > 0 and CurTime() > shockSnd then
                 local rndSnd = random( 3, 6 )
                 if rndSnd > 3 then wepent:EmitSound( "lambdaplayers/weapons/hl1/gauss/electro" .. rndSnd .. ".wav", 100, 100, Rand( 0.7, 0.8 ), CHAN_AUTO ) end
                 wepent.AfterShockSound = 0
@@ -108,31 +110,35 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             if random( 1, 10 ) == 1 then
                 self.l_WeaponUseCooldown = CurTime() + 0.5
 
-                if !wepent.ChargeSound then wepent.ChargeSound = CreateSound( wepent, "lambdaplayers/weapons/hl1/gauss/pulsemachine.wav" ) end
+                if !wepent.ChargeSound then wepent.ChargeSound = CreateSound( wepent, chargeSnd ) end
                 wepent.ChargeSound:PlayEx( 0.7, 110 )
                 wepent.ChargeSound:ChangePitch( 250, 4 )
 
                 wepent.ChargeStartTime = CurTime()
 
                 local chargeTime = Rand( 1, 4 )
-                local startHealth = self:Health()
+                local hpThreshold = ( self:Health() * Rand( 0.33, 0.66 ) )
                 self:Hook( "Think", "LambdaPlayer_HL1Gauss_SecondaryFire", function()
-                    if ( !LambdaIsValid( self ) or !IsValid( wepent ) or self:GetWeaponName() != "hl1_gauss" ) and wepent.ChargeSound then 
-                        wepent.ChargeSound:Stop() 
-                        wepent.ChargeSound = nil 
+                    if !LambdaIsValid( self ) or self:GetWeaponName() != "hl1_gauss" or !IsValid( wepent ) then 
+                        if IsValid( wepent ) and wepent.ChargeSound then 
+                            wepent.ChargeSound:Stop()
+                            wepent.ChargeSound = nil 
+                        end
+                        
                         return "end" 
                     end
 
                     self.l_WeaponUseCooldown = CurTime() + 0.5
 
                     local fireTarget = self:GetEnemy()
+                    local validTarget = LambdaIsValid( fireTarget )
                     local holdTime = ( CurTime() - wepent.ChargeStartTime )
 
-                    if holdTime >= ( chargeTime * ( self:CanSee( fireTarget ) and 1 or Rand( 1.75, 2.5 ) ) ) or !LambdaIsValid( fireTarget ) or self:Health() < ( startHealth * 0.5 ) then
+                    if !validTarget or self:Health() < hpThreshold or holdTime >= ( chargeTime * ( self:CanSee( fireTarget ) and 1 or Rand( 1.75, 2.5 ) ) ) then
                         wepent.ChargeSound:Stop()
                         wepent.ChargeSound = nil
 
-                        local firePos = ( LambdaIsValid( fireTarget ) and fireTarget:WorldSpaceCenter() or ( self:WorldSpaceCenter() + self:GetForward() * 8192 ) )
+                        local firePos = ( validTarget and fireTarget:WorldSpaceCenter() or ( self:WorldSpaceCenter() + self:GetForward() * 8192 ) )
                         FireBeam( self, wepent, firePos, true )
 
                         return "end"
