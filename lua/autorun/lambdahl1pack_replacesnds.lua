@@ -35,7 +35,7 @@ hook.Add( "EntityEmitSound", "LambdaPlayers_HL1Pack_ReplaceSounds", function( da
 
                 local owner = ent:GetOwner()
                 local validOwner = IsValid( owner )
-                util_BlastDamage( ( validOwner and owner:GetWeaponENT() or ent ), ( validOwner and owner or ent ), ent:GetPos(), 128, 40 )
+                util_BlastDamage( ( validOwner and owner:GetWeaponENT() or ent ), ( validOwner and owner or ent ), ent:GetPos(), 128, 50 )
             end
 
             ent:Remove()

@@ -63,7 +63,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             bolt.l_RemoveCall = "Lambda_HL1CrossbowBolt_OnRemoval" .. bolt:EntIndex()
 
             bolt:SetModel( "models/lambdaplayers/weapons/hl1/props/crossbow_bolt.mdl" )
-            bolt:Fire( "SetDamage", ( explosiveCvar:GetBool() and "10" or "50" ) )
+            bolt:Fire( "SetDamage", "50" )
             bolt:SetMoveType( MOVETYPE_FLY )
             bolt:SetVelocity( fireDir:Forward() * ( bolt:WaterLevel() == 3 and 1000 or 2000 ) )
             bolt:SetLocalAngularVelocity( Angle( 0, 0, 10 ) )
@@ -76,8 +76,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 util_Effect( "Explosion", effectData )
 
                 bolt:EmitSound( "lambdaplayers/weapons/hl1/explode" .. random( 3, 5 ) .. ".wav", SNDLVL_140dB, 100, 1, CHAN_STATIC )
-                local validOwner = IsValid( self )
-                util_BlastDamage( ( validOwner and self:GetWeaponENT() or bolt ), ( validOwner and self or bolt ), bolt:GetPos(), 128, 40 )
             end )
 
             self.l_Clip = self.l_Clip - 1
