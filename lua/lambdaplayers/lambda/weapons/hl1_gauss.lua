@@ -26,7 +26,7 @@ local function FireBeam( lambda, wepent, pos, secondaryFire )
     local fireStart = wepent:GetAttachment( 1 ).Pos
     local fireDir = ( pos - fireStart ):Angle()
     
-    local accuracyDecay = ( 400 * ( lambda:GetRangeSquaredTo( pos ) / ( 1024 * 1024 ) ) )
+    local accuracyDecay = min( 400, ( 400 * ( lambda:GetRangeSquaredTo( pos ) / ( 1024 * 1024 ) ) ) )
     if secondaryFire then accuracyDecay = accuracyDecay * 0.5 end
     local fireEnd = ( fireStart + fireDir:Forward() * 8192 + fireDir:Right() * random( -accuracyDecay, accuracyDecay ) + fireDir:Up() * random( -accuracyDecay, accuracyDecay ) )
 
