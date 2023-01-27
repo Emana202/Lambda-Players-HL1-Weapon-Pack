@@ -1,5 +1,3 @@
-if ( CLIENT ) then return end
-
 local IsValid = IsValid
 local GetConVar = GetConVar
 local EffectData = EffectData
@@ -26,11 +24,13 @@ hook.Add( "EntityEmitSound", "LambdaPlayers_HL1Pack_ReplaceSounds", function( da
             ent:RemoveCallOnRemove( ent.l_RemoveCall )
 
             if GetConVar( "lambdaplayers_weapons_hl1crossbow_explosivebolts" ):GetBool() then
-                local effectData = EffectData()
-                effectData:SetOrigin( ent:GetPos() )
-                effectData:SetFlags( 128 )
-                util_Effect( "Explosion", effectData )
-                
+                if IsFirstTimePredicted() then
+                    local effectData = EffectData()
+                    effectData:SetOrigin( ent:GetPos() )
+                    effectData:SetFlags( 128 )
+                    util_Effect( "Explosion", effectData )
+                end
+
                 ent:EmitSound( "lambdaplayers/weapons/hl1/explode" .. random( 3, 5 ) .. ".wav", 140, 100, 1, CHAN_STATIC )
 
                 local owner = ent:GetOwner()
