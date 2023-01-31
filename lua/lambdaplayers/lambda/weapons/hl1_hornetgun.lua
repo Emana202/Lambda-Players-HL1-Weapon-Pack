@@ -14,8 +14,11 @@ local ignorePlys = GetConVar( "ai_ignoreplayers" )
 local hornetMins, hornetMaxs = Vector( -4, -4, -4 ), Vector( 4, 4, 4 )
 local hornetClrRed, hornetClrOrange = Color(179, 39, 14, 128), Color(255, 128, 0, 128)
 
-local function IsValidEnemy( ent )
-    return ( LambdaIsValid( ent ) and ent:Health() > 0 and ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and ent:Alive() and !ignorePlys:GetBool() ) )
+local function IsValidEnemy( self, ent )
+    if !LambdaIsValid( ent ) or ent:Health() <= 0 then return false end
+    local owner = self:GetOwner()
+    if IsValid( owner ) then return owner:CanTarget( ent ) end
+    return ( ent:IsNPC() or ent:IsNextBot() or ent:IsPlayer() and ent:Alive() and !ignorePlys:GetBool() )
 end
 
 local function OnDieTouch( self, ent )
@@ -55,13 +58,13 @@ local function OnTrackThink( self )
     local myVel = self:GetVelocity()
 
     local enemy = self.l_Enemy
-    if !IsValidEnemy( enemy ) then
+    if !IsValidEnemy( self, enemy ) then
         local myOwner = self:GetOwner()
         local myFwd = self:GetForward()
 
         local lastDist = nil
         for _, v in ipairs( FindInSphere( myPos, 512 ) ) do
-            if v == myOwner or !IsValidEnemy( v ) or !self:Visible( v ) then continue end
+            if v == myOwner or !IsValidEnemy( self, v ) or !self:Visible( v ) then continue end
 
             local targPos = v:WorldSpaceCenter()
             local targDot = myFwd:Dot( ( targPos - myPos ):GetNormalized() )
@@ -106,9 +109,12 @@ local function OnTrackThink( self )
 end
 
 local function OnTrackTouch( self, ent )
-    if ent.l_IsLambdaHornet or ent == self:GetOwner() then return end
+    if ent.l_IsLambdaHornet then return end
 
-    if !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() then
+    local owner = self:GetOwner()
+    if ent == owner then return end
+
+    if !ent:IsNPC() and !ent:IsPlayer() and !ent:IsNextBot() or IsValid( owner ) and !owner:CanTarget( ent ) then
         local vel = self:GetVelocity():GetNormalized()
         vel.x = vel.x * -1; vel.y = vel.y * -1
 
