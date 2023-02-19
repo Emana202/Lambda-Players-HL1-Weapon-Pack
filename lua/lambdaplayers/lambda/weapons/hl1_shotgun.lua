@@ -2,6 +2,7 @@ local IsValid = IsValid
 local CurTime = CurTime
 local Rand = math.Rand
 local random = math.random
+local coroutine_wait = coroutine.wait
 
 local shellPos = Vector( -8, -1, 0 )
 local shellAng = Angle( 0, 90, 0 )
@@ -27,10 +28,6 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 800,
 
         clip = 8,
-        reloadtime = 3,
-        reloadanim = ACT_HL2MP_GESTURE_RELOAD_SHOTGUN,
-        reloadanimspeed = 1,
-
         callback = function( self, wepent, target )
             if self.l_Clip <= 0 then self:ReloadWeapon() return end
 
@@ -65,6 +62,41 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 wepent:EmitSound( "lambdaplayers/weapons/hl1/shotgun/scock1.wav", SNDLVL_NORM, 100, 1, CHAN_ITEM )
                 self:HandleShellEject( "ShotgunShellEject", shellPos, shellAng )
             end)
+
+            return true
+        end,
+
+        OnReload = function( self, wepent )
+            local animID = self:LookupSequence( "reload_shotgun_base_layer" )
+            if animID != -1 then 
+                self:AddGestureSequence( animID ) 
+            else 
+                self:AddGesture( ACT_HL2MP_GESTURE_RELOAD_SHOTGUN )
+            end
+
+            self:SetIsReloading( true )
+            self:Thread( function()
+
+                coroutine_wait( 0.66 )
+
+                while ( self.l_Clip < self.l_MaxClip ) do
+                    local ene = self:GetEnemy()
+                    if self.l_Clip > 0 and random( 1, 2 ) == 1 and self:InCombat() and self:IsInRange( ene, 512 ) and self:CanSee( ene ) then break end
+                    self.l_Clip = self.l_Clip + 1
+                    wepent:EmitSound( "lambdaplayers/weapons/hl1/shotgun/reload" .. random( 1, 2 ) .. ".wav", 80, 85 + random( 0, 31 ), 1, CHAN_ITEM )
+                    coroutine_wait( 0.5625 )
+                end
+
+                wepent:EmitSound( "lambdaplayers/weapons/hl1/shotgun/scock1.wav", SNDLVL_NORM, 100, 1, CHAN_ITEM )
+                local ene = self:GetEnemy()
+                if self.l_Clip > 0 and random( 1, 2 ) == 1 and self:InCombat() and self:IsInRange( ene, 512 ) and self:CanSee( ene ) then 
+                    coroutine_wait( 0.75 )
+                end
+
+                self:RemoveGesture( ACT_HL2MP_GESTURE_RELOAD_SHOTGUN )
+                self:SetIsReloading( false )
+
+            end, "HL1_ShotgunReload" )
 
             return true
         end,
