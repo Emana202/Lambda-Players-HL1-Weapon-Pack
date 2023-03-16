@@ -143,28 +143,32 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 750,
         attackrange = 1500,
 
-        OnEquip = function( self, wepent )
+        OnDeploy = function( self, wepent )
             wepent.UsingSecondaryFire = false
             wepent.HornetsLeft = 8
             wepent.FirePhase = 1
             wepent.RechargeTime = CurTime() + 0.5
         end,
 
-        OnUnequip = function( self, wepent )
+        OnHolster = function( self, wepent )
             wepent.UsingSecondaryFire = true
             wepent.HornetsLeft = nil
             wepent.FirePhase = nil
             wepent.RechargeTime = nil
         end,
 
-        OnThink = function( self, wepent )
-            if CurTime() <= wepent.RechargeTime then return end
+        OnThink = function( self, wepent, isdead )
+            if !isdead and CurTime() <= wepent.RechargeTime then return end
             wepent.HornetsLeft = min( wepent.HornetsLeft + 1, 8 )
             wepent.RechargeTime = CurTime() + 0.5
         end,
 
+        OnDeath = function( self, wepent )
+            wepent.HornetsLeft = 8
+        end,
+
         clip = 8,
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             if wepent.HornetsLeft > 0 then
                 local spawnPos = wepent:GetAttachment( 1 ).Pos
                 local spawnAng = ( target:WorldSpaceCenter() - spawnPos ):Angle()

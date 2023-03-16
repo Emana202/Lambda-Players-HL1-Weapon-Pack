@@ -30,7 +30,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 1500,
 
         clip = 5,
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             if self.l_Clip <= 0 then self:ReloadWeapon() return end
 
             local shootPos = ( ( random( 1, 3 ) == 1 and explosiveCvar:GetBool() ) and target:GetPos() or target:WorldSpaceCenter() )

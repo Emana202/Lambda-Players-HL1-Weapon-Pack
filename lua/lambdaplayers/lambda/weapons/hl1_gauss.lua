@@ -82,7 +82,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 750,
         attackrange = 2000,
 
-        OnEquip = function( self, wepent )
+        OnDeploy = function( self, wepent )
             wepent.AfterShockSound = 0
             wepent.ChargeStartTime = 0
             wepent:CallOnRemove( "Lambda_HL1Gauss_StopChargeSound" .. wepent:EntIndex(), function()
@@ -90,7 +90,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             end )
         end,
 
-        OnUnequip = function( self, wepent )
+        OnHolster = function( self, wepent )
             wepent.AfterShockSound = nil
             wepent.ChargeStartTime = nil
             wepent:RemoveCallOnRemove( "Lambda_HL1Gauss_StopChargeSound" .. wepent:EntIndex() )
@@ -106,7 +106,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         clip = 100,
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             if random( 1, 10 ) == 1 then
                 self.l_WeaponUseCooldown = CurTime() + 0.5
 

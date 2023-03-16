@@ -26,7 +26,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 800,
         attackrange = 3000,
 
-        Draw = function( self, wepent )
+        OnDraw = function( self, wepent )
             if !laserEnabled:GetBool() then return end
 
             local attachData = wepent:GetAttachment( 1 )
@@ -41,22 +41,22 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             render.DrawSprite( ( trDot.HitPos + trDot.HitNormal * 3 - EyeVector() * 4 ), 16, 16, color_white ) 
         end,
 
-        OnEquip = function( self, wepent )
+        OnDeploy = function( self, wepent )
             wepent.CurrentRocket = NULL
         end,
 
-        OnUnequip = function( self, wepent )
+        OnHolster = function( self, wepent )
             wepent.CurrentRocket = nil
         end,
 
-        OnThink = function( self, wepent )
-            if ( self.l_WeaponUseCooldown - CurTime() ) <= 2.0 and IsValid( wepent.CurrentRocket ) then
+        OnThink = function( self, wepent, isdead )
+            if !isdead and ( self.l_WeaponUseCooldown - CurTime() ) <= 2.0 and IsValid( wepent.CurrentRocket ) then
                 self.l_WeaponUseCooldown = CurTime() + 2.0
             end
             return 0.1
         end,
 
-        callback = function( self, wepent, target )            
+        OnAttack = function( self, wepent, target )            
             trTbl.start = wepent:GetAttachment( 1 ).Pos
             trTbl.endpos = target:GetPos()
             trTbl.filter = target

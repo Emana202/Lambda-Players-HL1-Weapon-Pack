@@ -15,7 +15,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 10,
         attackrange = 60,
 
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE )
 

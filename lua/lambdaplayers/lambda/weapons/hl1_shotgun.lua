@@ -28,7 +28,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 800,
 
         clip = 8,
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             if self.l_Clip <= 0 then self:ReloadWeapon() return end
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN )

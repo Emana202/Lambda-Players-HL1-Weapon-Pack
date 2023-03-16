@@ -32,7 +32,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackanim = ACT_HL2MP_GESTURE_RANGE_ATTACK_SMG1,
         attacksnd = "lambdaplayers/weapons/hl1/9mmar/hks*3*.wav",
 
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             if random( 50 ) != 1 or !self:IsInRange( target, 1000 ) then return end
 
             local grenade = ents_Create( "grenade_mp5" )

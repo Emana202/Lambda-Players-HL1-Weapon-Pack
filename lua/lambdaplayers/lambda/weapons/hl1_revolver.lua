@@ -23,7 +23,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 2000,
 
         clip = 6,
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             if self.l_Clip <= 0 then self:ReloadWeapon() return end
 
             self.l_WeaponUseCooldown = CurTime() + Rand( 0.8, 1.2 )

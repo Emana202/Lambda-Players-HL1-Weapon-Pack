@@ -87,7 +87,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         attackrange = 1000,
 
         clip = 10,
-        callback = function( self, wepent, target )
+        OnAttack = function( self, wepent, target )
             local holdTime = Rand( 0.75, 2.0 )
             local explodeTime = CurTime() + 3.75
             
