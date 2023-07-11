@@ -4,7 +4,7 @@ local Rand = math.Rand
 
 local bulletData = {
     Damage = 40,
-    Spread = Vector( 0.1, 0.1, 0 ),
+    Spread = Vector( 0.075, 0.075, 0 ),
     Force = 10,
     HullSize = 5,
     TracerName = "Tracer"
@@ -26,7 +26,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         OnAttack = function( self, wepent, target )
             if self.l_Clip <= 0 then self:ReloadWeapon() return end
 
-            self.l_WeaponUseCooldown = CurTime() + Rand( 0.8, 1.2 )
+            self.l_WeaponUseCooldown = CurTime() + Rand( 1.0, 1.75 )
             wepent:EmitSound( "lambdaplayers/weapons/hl1/357/357_shot" .. random( 1, 2 ) .. ".wav", 90, random( 95, 105 ), 1, CHAN_WEAPON )
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_REVOLVER )

@@ -5,7 +5,9 @@ local random = math.random
 local ents_Create = ents.Create
 local svGravity = GetConVar( "sv_gravity" )
 local TraceLine = util.TraceLine
-local trTbl = {}
+local trTbl = {
+    filter = {}
+}
 local laserMat = Material( "lambdaplayers/sprites/hl1_laserdot" )
 
 local laserEnabled = CreateLambdaConvar( "lambdaplayers_weapons_hl1rpg_enablelaserguidance", 1, true, false, true, "Enables HL1 RPG's laser guidance system.", 0, 1, { type = "Bool", name = "HL1 RPG - Enable Laser Guidance", category = "Weapon Utilities" } )
@@ -32,7 +34,9 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             local attachData = wepent:GetAttachment( 1 )
             trTbl.start = attachData.Pos
             trTbl.endpos = ( attachData.Pos + attachData.Ang:Forward() * 32756 )
-            trTbl.filter = { self, wepent, wepent.CurrentRocket }
+            trTbl.filter[ 1 ] = self
+            trTbl.filter[ 2 ] = wepent
+            trTbl.filter[ 3 ] = wepent:GetNW2Entity( "lambdahl1_rpgrocket", NULL )
 
             local trDot = TraceLine( trTbl )
             if trDot.HitSky then return end
@@ -42,18 +46,54 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         end,
 
         OnDeploy = function( self, wepent )
-            wepent.CurrentRocket = NULL
+            wepent:SetNW2Entity( "lambdahl1_rpgrocket", NULL )
+            wepent.RocketTargetTime = 0
+            wepent.RocketIgniteTime = 0
         end,
 
         OnHolster = function( self, wepent )
-            wepent.CurrentRocket = nil
+            wepent.RocketTargetTime = nil
+            wepent.RocketIgniteTime = nil
         end,
 
         OnThink = function( self, wepent, isdead )
-            if !isdead and ( self.l_WeaponUseCooldown - CurTime() ) <= 2.0 and IsValid( wepent.CurrentRocket ) then
-                self.l_WeaponUseCooldown = CurTime() + 2.0
+            if isdead or !laserEnabled:GetBool() then return end
+
+            local rocket = wepent:GetNW2Entity( "lambdahl1_rpgrocket", NULL )
+            if !IsValid( rocket ) then return end
+            
+            local curTime = CurTime()
+            if ( self.l_WeaponUseCooldown - curTime ) <= 2.0 then
+                self.l_WeaponUseCooldown = ( curTime + 2.0 )
             end
-            return 0.1
+            if curTime < wepent.RocketTargetTime then return end
+
+            local attachData = wepent:GetAttachment( 1 )
+            trTbl.start = attachData.Pos
+            trTbl.filter[ 1 ] = self
+            trTbl.filter[ 2 ] = wepent
+            trTbl.filter[ 3 ] = rocket
+
+            local ene = self:GetEnemy()
+            if LambdaIsValid( ene ) then
+                trTbl.endpos = ( attachData.Pos + ( ene:GetPos() - attachData.Pos ):GetNormalized() * 32756 )
+            else
+                trTbl.endpos = ( attachData.Pos + attachData.Ang:Forward() * 32756 )
+            end
+
+            vecTarget = ( TraceLine( trTbl ).HitPos - trTbl.start ):GetNormalized()
+            rocket:SetAngles( vecTarget:Angle() )
+
+            local speed = rocket:GetVelocity():Length()
+            if curTime < wepent.RocketIgniteTime then
+                rocket:SetLocalVelocity( rocket:GetVelocity() * 0.2 + vecTarget * speed * 0.798 )
+            else
+                rocket:SetLocalVelocity( rocket:GetVelocity() * 0.2 + vecTarget * ( speed * 0.8 + 400 ) )
+                local speedLimit = ( rocket:WaterLevel() == 3 and 300 or 2000 )
+                if rocket:GetVelocity():Length() > speedLimit then rocket:SetLocalVelocity( rocket:GetVelocity():GetNormalized() * speedLimit ) end
+            end
+
+            wepent.RocketTargetTime = ( curTime + 0.1 )
         end,
 
         OnAttack = function( self, wepent, target )            
@@ -98,44 +138,10 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             rocket:SetLocalVelocity( spawnAng:Forward() * 250 + selfFwd * self.loco:GetVelocity():Dot( selfFwd ) )
 
             if laserEnabled:GetBool() then
-                wepent.CurrentRocket = rocket
-                self.l_WeaponUseCooldown = self.l_WeaponUseCooldown + 2.0
-
-                local nextTargetTime = CurTime() + 0.4
-                local fullIgnitionTime = CurTime() + 1.4
-
-                rocket:LambdaHookTick( "Lambda_HL1Rocket_LaserGuidance", function()
-                    if !LambdaIsValid( self ) or !IsValid( wepent ) or self:GetWeaponName() != "hl1_rpg" or !laserEnabled:GetBool() then 
-                        if IsValid( wepent ) then wepent.CurrentRocket = NULL end
-                        return true 
-                    end
-                    if CurTime() <= nextTargetTime then return end
-
-                    local attachData = wepent:GetAttachment( 1 )
-                    trTbl.start = attachData.Pos
-                    trTbl.filter = { self, wepent, rocket }
-
-                    local ene = self:GetEnemy()
-                    if LambdaIsValid( ene ) then
-                        trTbl.endpos = attachData.Pos + ( ene:GetPos() - attachData.Pos ):GetNormalized() * 32756
-                    else
-                        trTbl.endpos = attachData.Pos + attachData.Ang:Forward() * 32756
-                    end
-                    vecTarget = ( TraceLine( trTbl ).HitPos - trTbl.start ):GetNormalized()
-
-                    rocket:SetAngles( vecTarget:Angle() )
-
-                    local speed = rocket:GetVelocity():Length()
-                    if CurTime() < fullIgnitionTime then
-                        rocket:SetLocalVelocity( rocket:GetVelocity() * 0.2 + vecTarget * speed * 0.798 )
-                    else
-                        rocket:SetLocalVelocity( rocket:GetVelocity() * 0.2 + vecTarget * ( speed * 0.8 + 400 ) )
-                        local speedLimit = ( rocket:WaterLevel() == 3 and 300 or 2000 )
-                        if rocket:GetVelocity():Length() > speedLimit then rocket:SetLocalVelocity( rocket:GetVelocity():GetNormalized() * speedLimit ) end
-                    end
-
-                    nextTargetTime = CurTime() + 0.1
-                end )
+                wepent:SetNW2Entity( "lambdahl1_rpgrocket", rocket )
+                wepent.RocketTargetTime = ( CurTime() + 0.4 )
+                wepent.RocketIgniteTime = ( CurTime() + 1.4 )
+                self.l_WeaponUseCooldown = ( self.l_WeaponUseCooldown + 2.0 )
             end
 
             return true

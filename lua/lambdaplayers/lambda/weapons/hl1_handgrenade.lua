@@ -64,7 +64,7 @@ local function ExplodeGrenade( self )
 
     local effectData = EffectData()
     effectData:SetOrigin( hitpos )
-    util_Effect( "Explosion", effectData, true, true )
+    util_Effect( "Explosion", effectData )
     self:EmitSound( "lambdaplayers/weapons/hl1/explode" .. random( 3, 5 ) .. ".wav", 140, 100, 1, CHAN_STATIC )
 
     local owner = self:GetOwner()

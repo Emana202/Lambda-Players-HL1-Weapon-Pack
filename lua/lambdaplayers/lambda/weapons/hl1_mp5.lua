@@ -1,5 +1,7 @@
 local IsValid = IsValid
 local CurTime = CurTime
+local util_Effect = util.Effect
+local EffectData = EffectData
 local random = math.random
 local Rand = math.Rand
 local ents_Create = ents.Create
@@ -59,6 +61,14 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             grenade:SetMoveType(MOVETYPE_FLYGRAVITY)
             grenade:SetVelocity( vecThrow:Forward() * 800 )
             grenade:SetLocalAngularVelocity( Angle( -Rand( -100, -500 ), 0, 0 ) )
+
+            local removeBack = "LambdaHL1_OnMP5GrenadeRemoved"
+            grenade:CallOnRemove( removeBack, function()
+                local effectData = EffectData()
+                effectData:SetOrigin( grenade:GetPos() )
+                util_Effect( "Explosion", effectData )
+                grenade:EmitSound( "lambdaplayers/weapons/hl1/explode" .. random( 3, 5 ) .. ".wav", 140, 100, 1, CHAN_STATIC )
+            end )
 
             return true
         end,
