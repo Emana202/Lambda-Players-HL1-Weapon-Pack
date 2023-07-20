@@ -29,7 +29,7 @@ local function OnDieTouch( self, ent )
         self:EmitSound( "lambdaplayers/weapons/hl1/hornetgun/ag_hornethit" .. random( 1, 3 ) .. ".wav", 75, 100, 1, CHAN_VOICE )
         local dmginfo = DamageInfo()
         dmginfo:SetAttacker( owner )
-        dmginfo:SetInflictor( owner:GetWeaponENT() )
+        dmginfo:SetInflictor( self )
         dmginfo:SetDamage( 7 )
         dmginfo:SetDamageType( DMG_NEVERGIB )
         dmginfo:SetDamageForce( self:GetForward() * 2000 )
@@ -243,7 +243,10 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                     hornet:SetModel( "models/lambdaplayers/weapons/hl1/props/hornet.mdl" )
                     hornet:SetCollisionBounds( hornetMins, hornetMaxs )
                     hornet:ResetSequenceInfo()
+                    
                     hornet.OnTakeDamage = OnTakeDamage
+                    hornet.l_UseLambdaDmgModifier = true
+                    hornet.l_killiconname = wepent.l_killiconname
 
                     local trailColor = ( hornet.l_IsRed and hornetClrRed or hornetClrOrange )
                     SpriteTrail( hornet, 0, trailColor, true, 4, 2, 1, 0.05, "sprites/laserbeam.vmt" )
@@ -258,7 +261,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 end
             else
                 wepent.UsingSecondaryFire = false
-                self.l_WeaponUseCooldown = CurTime() + ( random( 1, 4 ) == 1 and Rand( 1.0, 4.0 ) or 0.25 )
+                self.l_WeaponUseCooldown = CurTime() + ( random( 1, 6 ) == 1 and Rand( 1.0, 3.0 ) or 0.25 )
             end
 
             return true

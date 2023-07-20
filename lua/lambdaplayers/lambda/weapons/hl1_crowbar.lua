@@ -26,9 +26,13 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             dmginfo:SetInflictor( wepent )
             dmginfo:SetDamageType( DMG_CLUB )
             dmginfo:SetDamageForce( ( target:WorldSpaceCenter() - self:WorldSpaceCenter() ):GetNormalized() * dmg )
-
             target:TakeDamageInfo( dmginfo )
-            wepent:EmitSound( "lambdaplayers/weapons/hl1/crowbar/cbar_hitbod" .. random( 1, 3 ) .. ".wav", 75, random( 98, 102 ), 1, CHAN_WEAPON )
+
+            if target:IsPlayer() or target:IsNextBot() or target:IsNPC() then
+                wepent:EmitSound( "lambdaplayers/weapons/hl1/crowbar/cbar_hitbod" .. random( 3 ) .. ".wav", 85, 100, 1, CHAN_ITEM )
+            else
+                wepent:EmitSound( "lambdaplayers/weapons/hl1/crowbar/cbar_hit" .. random( 2 ) .. ".wav", 95, ( 98 + random( 0, 3 ) ), 0.6, CHAN_ITEM )
+            end
 
             self.l_WeaponUseCooldown = CurTime() + 0.25
             return true

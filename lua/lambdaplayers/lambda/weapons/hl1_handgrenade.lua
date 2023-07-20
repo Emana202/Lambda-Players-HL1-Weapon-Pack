@@ -13,9 +13,6 @@ local util_Decal = util.Decal
 local TraceLine = util.TraceLine
 local trTbl = {}
 
-local vec3_origin = Vector()
-local vec3_angles = Angle()
-
 local function OnGrenadeTouch( self, ent )
     if ent == self:GetOwner() or !ent:IsSolid() or ent:GetSolidFlags() == FSOLID_VOLUME_CONTENTS then return end
     if ent:IsPlayer() then self:SetCollisionGroup( COLLISION_GROUP_DEBRIS ) end
@@ -28,7 +25,7 @@ local function OnGrenadeTouch( self, ent )
     trTbl.filter = self    
     if TraceLine( trTbl ).Fraction < 1.0 then
         self:SetSequence( self:SelectWeightedSequence( ACT_IDLE ) )
-        self:SetAngles( vec3_angles )
+        self:SetAngles( angle_zero )
     end
 
     local selfVel = self:GetVelocity()
@@ -68,7 +65,7 @@ local function ExplodeGrenade( self )
     self:EmitSound( "lambdaplayers/weapons/hl1/explode" .. random( 3, 5 ) .. ".wav", 140, 100, 1, CHAN_STATIC )
 
     local owner = self:GetOwner()
-    util_BlastDamage( ( IsValid( owner ) and owner:GetWeaponENT() or self ), ( IsValid( owner ) and owner or self ), selfPos, 250, 100 )
+    util_BlastDamage( self, ( IsValid( owner ) and owner or self ), selfPos, 250, 100 )
 
     util_Decal( "Scorch", hitpos + hitnorm, hitpos - hitnorm )
     self:Remove()
@@ -89,19 +86,15 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         clip = 10,
         OnAttack = function( self, wepent, target )
             local holdTime = Rand( 0.75, 2.0 )
-            local explodeTime = CurTime() + 3.75
-            
             self.l_WeaponUseCooldown = CurTime() + holdTime + 1.0
-
-            self:SimpleTimer( ( holdTime - 0.25 ), function()
-                if !IsValid( wepent ) or self:GetWeaponName() != "hl1_handgrenade" then return end
+            
+            self:SimpleWeaponTimer( ( holdTime - 0.25 ), function()
                 self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE )
                 self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_GRENADE )
             end )
 
-            self:SimpleTimer( holdTime, function()
-                if !IsValid( wepent ) or self:GetWeaponName() != "hl1_handgrenade" then return end
-
+            local explodeTime = CurTime() + 3.75
+            self:SimpleWeaponTimer( holdTime, function()
                 local grenade = ents_Create( "base_anim" )
                 if !IsValid( grenade ) then return end
 
@@ -120,7 +113,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 grenade:SetMoveCollide( MOVECOLLIDE_FLY_BOUNCE )
                 grenade:SetSolid( SOLID_BBOX )
                 grenade:AddSolidFlags( FSOLID_NOT_STANDABLE )
-                grenade:SetCollisionBounds( vec3_origin, vec3_origin )
+                grenade:SetCollisionBounds( vector_origin, vector_origin )
                 
                 local gravVal = svGravity:GetInt()
                 if gravVal != 0 then grenade:SetGravity( 400 / gravVal ) end
@@ -131,6 +124,9 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                 grenade:SetVelocity( vecThrow:Forward() * 500 )
                 grenade:SetLocalAngularVelocity( Angle( random( -200, 200 ), random( 400, 500 ), random( -100, 100 ) ) )
+
+                grenade.l_UseLambdaDmgModifier = true
+                grenade.l_killiconname = wepent.l_killiconname
 
                 grenade.Touch = OnGrenadeTouch
                 timer_Simple( ( explodeTime - CurTime() ), function() ExplodeGrenade( grenade ) end)

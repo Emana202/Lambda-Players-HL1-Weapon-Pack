@@ -29,7 +29,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         clip = 8,
         OnAttack = function( self, wepent, target )
-            if self.l_Clip <= 0 then self:ReloadWeapon() return end
+            if self.l_Clip <= 0 then self:ReloadWeapon() return true end
 
             self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN )
             self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_SHOTGUN )
@@ -49,16 +49,15 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 bulletData.Num = 6
             end
 
-            self:HandleMuzzleFlash( 1 )
-
             bulletData.Attacker = self
             bulletData.IgnoreEntity = self
             bulletData.Src = wepent:GetPos()
             bulletData.Dir = ( target:WorldSpaceCenter() - bulletData.Src ):GetNormalized()
             wepent:FireBullets( bulletData )
 
-            self:SimpleTimer( pumpTime, function()
-                if !IsValid( wepent ) or self:GetWeaponName() != "hl1_shotgun" then return end
+            self:HandleMuzzleFlash( 1 )
+
+            self:SimpleWeaponTimer( pumpTime, function()
                 wepent:EmitSound( "lambdaplayers/weapons/hl1/shotgun/scock1.wav", SNDLVL_NORM, 100, 1, CHAN_ITEM )
                 self:HandleShellEject( "ShotgunShellEject", shellPos, shellAng )
             end)
@@ -80,16 +79,19 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                 coroutine_wait( 0.66 )
 
                 while ( self.l_Clip < self.l_MaxClip ) do
+                    if !self:GetIsReloading() then return end
+
                     local ene = self:GetEnemy()
-                    if self.l_Clip > 0 and random( 1, 2 ) == 1 and self:InCombat() and self:IsInRange( ene, 512 ) and self:CanSee( ene ) then break end
-                    self.l_Clip = self.l_Clip + 1
+                    if self.l_Clip > 0 and random( 2 ) == 1 and self:InCombat() and self:IsInRange( ene, 512 ) and self:CanSee( ene ) then break end
+                    
+                    self.l_Clip = ( self.l_Clip + 1 )
                     wepent:EmitSound( "lambdaplayers/weapons/hl1/shotgun/reload" .. random( 1, 2 ) .. ".wav", 80, 85 + random( 0, 31 ), 1, CHAN_ITEM )
                     coroutine_wait( 0.5625 )
                 end
-
                 wepent:EmitSound( "lambdaplayers/weapons/hl1/shotgun/scock1.wav", SNDLVL_NORM, 100, 1, CHAN_ITEM )
+                
                 local ene = self:GetEnemy()
-                if self.l_Clip > 0 and random( 1, 2 ) == 1 and self:InCombat() and self:IsInRange( ene, 512 ) and self:CanSee( ene ) then 
+                if self.l_Clip > 0 and random( 2 ) == 1 and self:InCombat() and self:IsInRange( ene, 512 ) and self:CanSee( ene ) then 
                     coroutine_wait( 0.75 )
                 end
 
