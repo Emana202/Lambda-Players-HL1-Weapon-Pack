@@ -21,7 +21,8 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         prettyname = "Snarks",
         holdtype = "slam",
         bonemerge = true,
-        
+        dropondeath = false,
+
         keepdistance = 600,
         attackrange = 750,
         islethal = true,
