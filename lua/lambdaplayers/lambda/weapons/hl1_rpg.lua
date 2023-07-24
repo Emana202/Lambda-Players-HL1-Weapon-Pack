@@ -103,9 +103,11 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         OnAttack = function( self, wepent, target )
             trTbl.start = wepent:GetAttachment( 1 ).Pos
             trTbl.endpos = target:GetPos()
-            trTbl.filter = target
-            if self:GetForward():Dot( ( trTbl.endpos - trTbl.start ):GetNormalized() ) < 0.66 then return true end
 
+            local selfFwd = self:GetForward()
+            if selfFwd:Dot( ( trTbl.endpos - trTbl.start ):GetNormalized() ) < 0.66 then return true end
+
+            trTbl.filter = target
             local tr = TraceLine( trTbl )
             if tr.Entity == self then self.l_WeaponUseCooldown = CurTime() + 0.25 return true end
 
