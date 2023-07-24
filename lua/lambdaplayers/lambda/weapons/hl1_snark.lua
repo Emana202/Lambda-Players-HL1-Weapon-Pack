@@ -16,7 +16,7 @@ local crouchedOffset = Vector( -32, -32, -42 )
 
 table.Merge( _LAMBDAPLAYERSWEAPONS, {
     hl1_snark = {
-        model = "models/weapons/w_squeak_hls.mdl",
+        model = "models/lambdaplayers/weapons/hl1/w_squeak.mdl",
         origin = "Half-Life 1",
         prettyname = "Snarks",
         holdtype = "slam",
