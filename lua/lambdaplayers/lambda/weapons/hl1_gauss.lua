@@ -105,7 +105,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
             end
         end,
 
-        clip = 100,
+        clip = -1,
         OnAttack = function( self, wepent, target )
             if random( 1, 10 ) == 1 then
                 self.l_WeaponUseCooldown = CurTime() + 0.5

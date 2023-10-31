@@ -145,31 +145,28 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
         OnDeploy = function( self, wepent )
             wepent.UsingSecondaryFire = false
-            wepent.HornetsLeft = 8
             wepent.FirePhase = 1
             wepent.RechargeTime = CurTime() + 0.5
         end,
 
         OnHolster = function( self, wepent )
             wepent.UsingSecondaryFire = true
-            wepent.HornetsLeft = nil
             wepent.FirePhase = nil
             wepent.RechargeTime = nil
         end,
 
         OnThink = function( self, wepent, isdead )
             if !isdead and CurTime() <= wepent.RechargeTime then return end
-            wepent.HornetsLeft = min( wepent.HornetsLeft + 1, 8 )
             wepent.RechargeTime = CurTime() + 0.5
-        end,
-
-        OnDeath = function( self, wepent )
-            wepent.HornetsLeft = 8
+            
+            local hornetCount = self.l_Clip
+            if hornetCount == -1 then hornetCount = 0 end
+            self.l_Clip = min( hornetCount + 1, 8 )
         end,
 
         clip = 8,
         OnAttack = function( self, wepent, target )
-            if wepent.HornetsLeft > 0 then
+            if self.l_Clip > 0 then
                 local spawnPos = wepent:GetAttachment( 1 ).Pos
                 local spawnAng = ( target:WorldSpaceCenter() - spawnPos ):Angle()
                 if self:GetForward():Dot( spawnAng:Forward() ) < 0.33 then return true end
@@ -181,7 +178,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
 
                     local inRange = self:IsInRange( target, 350 )
                     if !wepent.UsingSecondaryFire then
-                        if wepent.HornetsLeft > 4 then
+                        if self.l_Clip > 4 then
                             wepent.UsingSecondaryFire = inRange
                         end
                     elseif !inRange then
@@ -256,7 +253,10 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
                     self:RemoveGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_PISTOL )
                     self:AddGesture( ACT_HL2MP_GESTURE_RANGE_ATTACK_PISTOL )
 
-                    wepent.HornetsLeft = ( wepent.HornetsLeft - 1 )
+                    local hornetLeft = ( self.l_Clip - 1 )
+                    if hornetLeft == 0 then hornetLeft = -1 end
+                    self.l_Clip = hornetLeft
+
                     wepent.RechargeTime = CurTime() + 0.5
                 end
             else

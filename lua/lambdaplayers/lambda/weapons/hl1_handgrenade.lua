@@ -83,7 +83,7 @@ table.Merge( _LAMBDAPLAYERSWEAPONS, {
         keepdistance = 650,
         attackrange = 1000,
 
-        clip = 10,
+        clip = -1,
         OnAttack = function( self, wepent, target )
             local holdTime = Rand( 0.75, 2.0 )
             self.l_WeaponUseCooldown = CurTime() + holdTime + 1.0
